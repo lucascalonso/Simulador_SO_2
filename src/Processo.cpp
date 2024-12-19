@@ -4,7 +4,6 @@
 Processo::Processo(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram)
     : id(id), duracaoCpu1(duracaoCpu1), duracaoIo(duracaoIo), duracaoCpu2(duracaoCpu2), ram(ram), estado(Estado::PRONTO)
 {   
-    tempoRestanteIO = duracaoIo;
     tempoRestante = duracaoCpu1 + duracaoIo + duracaoCpu2;
 }
 
@@ -42,16 +41,6 @@ void Processo::executarIo(int tempo) {
         duracaoIo = std::max(0, duracaoIo - tempo);
         std::cout << "Processo #" << id << " executando I/O por " << tempo << " unidades. Restante: " << duracaoIo << "\n";
     }
-}
-
-void Processo::atualizarEstado() {
-    if (tempoRestante <= 0) {
-        alterarEstado(Estado::TERMINADO);
-    }
-    else if (estado == Estado::EM_ESPERA) {
-        alterarEstado(Estado::PRONTO);
-    }
-    // Execução já é feita pelo Despachante no método escalonar!
 }
 
 int Processo::getRam() const {return ram;}

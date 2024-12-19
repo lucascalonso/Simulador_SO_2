@@ -65,7 +65,7 @@ void Despachante::escalonar(int delay) {
             std::cout << "----------------------------------------------Quantum # "  << num_quantum << "----------------------------------------------" << std::endl;
             for (int i = 0; i < cpusDisponiveis.size(); i++) {
                 if (!cpusDisponiveis[i]) {
-                    //Necessário para evitar bad_alloc (não pergunte o porquê)
+                    //Necessário para evitar bad_alloc (nullptr)
                     if (filaProntos.empty()) {                                            
                         break;
                     }
