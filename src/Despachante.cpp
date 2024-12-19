@@ -78,7 +78,7 @@ void Despachante::escalonar(int delay) {
                         continue;
                     }
 
-                    //Se processo já está no Set processosAlocados, skipa loop E PUSHA NA FILA NÉ RAPAZ
+                    //Se processo já está no Set processosAlocados, skipa loop e enqueue
                     if (processosAlocados.find(processoAtual) != processosAlocados.end()) {
                         filaProntos.push(processoAtual);
                         continue;

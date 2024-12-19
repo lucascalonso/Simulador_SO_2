@@ -38,7 +38,6 @@ public:
     void atualizarTempoCpu2(int tempo);
     void atualizarTempoIo(int tempo);
     std::string getEstadoString() const;
-    void exibirInformacoes() const;
     void executarCpu(int tempo);
     void executarIo(int tempo);
 };

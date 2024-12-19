@@ -19,12 +19,6 @@ std::string Processo::getEstadoString() const{
     }
 }
 
-void Processo::exibirInformacoes() const{
-    std::cout << "Processo #" << id
-              << " [RAM: " << ram << " MB, Estado: " << getEstadoString() << "]"
-              << std::endl;
-}
-
 void Processo::executarCpu(int tempo) {
     
     tempoRestante -= tempo;
