@@ -21,7 +21,7 @@ class GerenciadorMemoria{
         int getNumPaginas();
         void visualizarMemoria();
         bool alocarMemoria(int processoId, int tamanho);
-        bool liberaMemoria(Processo* processo);
+        void liberaMemoria(Processo* processo);
 
 };
 #endif

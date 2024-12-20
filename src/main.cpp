@@ -20,8 +20,15 @@ int main() {
     despachante.adicionarPronto(new Processo(8, 2, 3, 1, 5618)); 
     despachante.adicionarPronto(new Processo(9, 8, 4, 8, 10096));  
     
-    //delay 3s pra visualizar
-    despachante.escalonar(3000);
+    char continua;
+
+    do{
+        despachante.escalonar();
+        std::cout << "Digite y ou Y para continuar.\n";
+        std::cin >> continua;
+
+    } while (continua == 'y' || continua == 'Y');
     
+    //std::cout << "Saindo...\n";
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "../include/Processo.h"
+#include "../include/GerenciadorMemoria.h"
 #include <iostream>
 
 Processo::Processo(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram)
@@ -59,3 +60,9 @@ void Processo::atualizarTempoIo(int tempo) {
     duracaoIo = std::max(0, duracaoIo - tempo);
 }
 
+bool Processo::checarTermino(){
+    if (getTempoRestante() <= 0){
+        return true;
+    }
+    return false;
+}

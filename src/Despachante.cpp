@@ -48,88 +48,69 @@ void Despachante::imprimirFila(const std::queue<Processo*>& fila, const std::str
             std::cerr << "Erro: Processo nulo encontrado na fila.\n";
         }
     }
+    std::cout << std::endl;
 }
 
-void Despachante::escalonar(int delay) {
-    int num_quantum = 0;
-    while (!filaProntos.empty() || !filaBloqueados.empty()) {
-        std::cout << std::endl;
-        desbloquear();
-        std::cout << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-        //Set para não executar o mesmo processo em mais de um CPU um quantum
-        std::unordered_set<Processo*> processosAlocados; 
+void Despachante::escalonar() {
+    
+    //Caso não tenha nenhum processo em ambas as filas, não há processos para executar
+    if (filaProntos.empty() && filaBloqueados.empty()) {
+        std::cout << "Nenhum processo pronto e a fila de bloqueados está vazia. Aguardando chegada de processos..\n";
+        return;
+    }
+    //Tenta desbloquear processos
+    desbloquear();
+    std::unordered_set<Processo*> processosAlocados;
 
-        if (!filaProntos.empty()) {
-            num_quantum++;
-            std::cout << "----------------------------------------------Quantum # "  << num_quantum << "----------------------------------------------" << std::endl;
-            for (int i = 0; i < cpusDisponiveis.size(); i++) {
-                if (!cpusDisponiveis[i]) {
-                    //Necessário para evitar bad_alloc (nullptr)
-                    if (filaProntos.empty()) {                                            
-                        break;
-                    }
 
-                    Processo* processoAtual = filaProntos.front();
-                    filaProntos.pop();
+    for (size_t i = 0; i < cpusDisponiveis.size(); ++i) {
+            if (!cpusDisponiveis[i] && !filaProntos.empty()) {
+                Processo* processoAtual = filaProntos.front();
+                filaProntos.pop();
 
-                    if (!processoAtual) {
-                        std::cerr << "Erro: Processo nulo na fila de prontos.\n";
-                        continue;
-                    }
+                //Tratar nullptr
+                if (!processoAtual) {
+                    std::cerr << "Erro: Processo nulo na fila de prontos.\n";
+                    continue;
+                }
 
-                    //Se processo já está no Set processosAlocados, skipa loop e enqueue
-                    if (processosAlocados.find(processoAtual) != processosAlocados.end()) {
-                        filaProntos.push(processoAtual);
-                        continue;
-                    }
-                    //Seta CPU ocupado
-                    cpusDisponiveis[i] = true;
+                //Se o processo já está no set, já está alocado nesse quantum
+                if (processosAlocados.find(processoAtual) != processosAlocados.end()) {
+                    filaProntos.push(processoAtual);  // Re-add process to the queue if already allocated
+                    continue;
+                }
 
-                    int tempoExecutado = std::min(quantum, processoAtual->getTempoRestante());
-                    processoAtual->executarCpu(tempoExecutado);
-                    std::cout << "Processo #" << processoAtual->getId() << " executado na CPU " << i + 1 << ". Tempo restante: " << processoAtual->getTempoRestante() << "\n";
+                //Marca processo como alocado nesse quantum
+                processosAlocados.insert(processoAtual);
 
-                    //Adiciona processo ao Set
-                    processosAlocados.insert(processoAtual);
+                //Marca CPU como ocupado
+                cpusDisponiveis[i] = true;
 
-                    //Se processo terminou execução, libera memória
-                    if (processoAtual->getTempoRestante() <= 0) {
-                        processosAlocados.erase(processoAtual);
-                        std::cout << "Processo #" << processoAtual->getId() << " finalizado.\n";
-                        if (gerenciadorMemoria) {
-                            gerenciadorMemoria->liberaMemoria(processoAtual);
-                        }
-                        delete processoAtual;
-                    } else {
-                        //Reinsere na fila se ainda tem tempo de execução
-                        filaProntos.push(processoAtual); 
-                    }
-                    //Limpa iésimo CPU
-                    liberarCPU(i);  
+                int tempoExecutado = std::min(quantum, processoAtual->getTempoRestante());
+                processoAtual->executarCpu(tempoExecutado);
+                std::cout << "Processo #" << processoAtual->getId() 
+                          <<  " executado por " << tempoExecutado << " u.t" 
+                          << ". Tempo restante: " << processoAtual->getTempoRestante() << "\n";
+
+                // Checa se processo terminou
+                if (processoAtual->checarTermino()) {
+                    gerenciadorMemoria->liberaMemoria(processoAtual);
+                    std::cout << "Processo #" << processoAtual->getId() 
+                              << " finalizado e memória liberada.\n";
+                    liberarCPU(i);
+                } else {
+                    //Caso ainda reste tempo, move processo para fila de prontos
+                    filaProntos.push(processoAtual);
+                    liberarCPU(i);
                 }
             }
-            imprimirFila(filaProntos, "Fila de Prontos");
-            std::cout << std::endl;
-            imprimirFila(filaBloqueados, "Fila de Bloqueados");
-            std::cout << std::endl;
-            gerenciadorMemoria->visualizarMemoria();
-            std::cout << std::endl;
-            //Limpa o Set de processos que rodaram nesse quantum
-            processosAlocados.clear();
-
-        } else {
-            if (filaBloqueados.empty()) {
-                std::cout << "Nenhum processo pronto e a fila de bloqueados está vazia. Aguardando execução dos processos..\n";
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-            } else {
-                std::cout << "Nenhum processo pronto. Aguardando desbloqueio..\n";
-                std::this_thread::sleep_for(std::chrono::milliseconds(delay));
-            }
-        }
     }
 
-    std::cout << "Todos os processos foram finalizados.\n";
+
+    //Visualização
+    imprimirFila(filaProntos, "Fila de Prontos");
+    imprimirFila(filaBloqueados, "Fila de Bloqueados");
+    gerenciadorMemoria->visualizarMemoria();
 }
 
 void Despachante::setGerenciadorMemoria(GerenciadorMemoria* gm) {

@@ -31,7 +31,7 @@ bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
     return true;
 }
 
-bool GerenciadorMemoria::liberaMemoria(Processo* processo) {
+void GerenciadorMemoria::liberaMemoria(Processo* processo) {
     int processoId = processo->getId();
     int tamanhoBloco = processo->getRam();
     int paginasLiberadas = tamanhoBloco / tamPaginas;
@@ -44,7 +44,6 @@ bool GerenciadorMemoria::liberaMemoria(Processo* processo) {
     }
     std::cout << "Memória de " << tamanhoBloco << " MB liberada pelo Processo #" << processoId << "\n";
     tamanhoLivre += tamanhoBloco;
-    return true;
 }
 
 

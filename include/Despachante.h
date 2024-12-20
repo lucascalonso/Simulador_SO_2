@@ -30,10 +30,7 @@ public:
     void adicionarBloqueado(Processo* processo);
     Processo* recuperarProcessoPorId(int processoId);
     void desbloquear();
-    void escalonar(int delay);
+    void escalonar();
     void liberarCPU(int cpuIndex);
-    void imprimirStatus();
-    void simularPassagemDeTempo();
-    std::vector<Processo*>& getProcessos();
 };
 #endif

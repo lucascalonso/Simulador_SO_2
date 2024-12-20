@@ -32,7 +32,6 @@ public:
     int getDuracaoCpu2() const;
     int getDuracaoIo() const;
     int getTempoRestante() const {return tempoRestante;};
-    void reduzirTempo(int quantum) {tempoRestante -= quantum;};
     void alterarEstado(Estado novoEstado);
     void atualizarTempoCpu1(int tempo);
     void atualizarTempoCpu2(int tempo);
@@ -40,5 +39,6 @@ public:
     std::string getEstadoString() const;
     void executarCpu(int tempo);
     void executarIo(int tempo);
+    bool checarTermino();
 };
 #endif
