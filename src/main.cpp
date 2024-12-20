@@ -1,7 +1,6 @@
 #include "../include/Despachante.h"
 #include "../include/GerenciadorMemoria.h"
 #include <iostream>
-#include <thread>
 #include <wx/wxprec.h>
 
 int main() {

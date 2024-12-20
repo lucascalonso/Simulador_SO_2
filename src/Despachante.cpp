@@ -2,22 +2,13 @@
 #include "../include/Processo.h"
 #include "../include/GerenciadorMemoria.h"
 #include <iostream>
-#include <thread>
 #include <unordered_set>
-#include <chrono>
 
 
 Despachante::Despachante(int quantum,int numCpus) : quantum(quantum){
     cpusDisponiveis.resize(numCpus,false);
 }
 
-Processo* Despachante::recuperarProcessoPorId(int processoId) {
-    auto it = processosPorId.find(processoId);
-    if (it != processosPorId.end()) {
-        return it->second;
-    }
-    return nullptr;
-}
 
 void Despachante::adicionarPronto(Processo* processo) {
     std::cout << "Adicionando Processo# " << processo->getId() << " na fila " << std::endl;

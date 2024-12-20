@@ -4,7 +4,6 @@
 #include "Processo.h"
 #include <queue>
 #include <vector>
-#include <map>
 #include "GerenciadorMemoria.h"
 
 class GerenciadorMemoria;
@@ -12,7 +11,6 @@ class GerenciadorMemoria;
 class Despachante {
 private:
     int cpusNums;
-    std::map<int,Processo*> processosPorId;
     std::vector<bool> cpusDisponiveis;
     std::queue<Processo*> filaProntos;
     std::queue<Processo*> filaBloqueados;
