@@ -76,7 +76,7 @@ void Despachante::escalonar() {
 
                 //Se o processo já está no set, já está alocado nesse quantum
                 if (processosAlocados.find(processoAtual) != processosAlocados.end()) {
-                    filaProntos.push(processoAtual);  // Re-add process to the queue if already allocated
+                    filaProntos.push(processoAtual);
                     continue;
                 }
 
@@ -92,6 +92,7 @@ void Despachante::escalonar() {
                           <<  " executado por " << tempoExecutado << " u.t" 
                           << ". Tempo restante: " << processoAtual->getTempoRestante() << "\n";
 
+                //Tratar casos onde processo termina no meio de um quantum
                 // Checa se processo terminou
                 if (processoAtual->checarTermino()) {
                     gerenciadorMemoria->liberaMemoria(processoAtual);
