@@ -1,6 +1,7 @@
 #include "../include/Despachante.h"
 #include "../include/Processo.h"
 #include "../include/GerenciadorMemoria.h"
+#include "../include/globals.h"
 #include <iostream>
 #include <unordered_set>
 
@@ -29,7 +30,8 @@ void Despachante::imprimirFila(const std::queue<Processo*>& fila, const std::str
     std::cout << nomeFila << ":\n";
     if (fila.empty()) return;
 
-    std::queue<Processo*> copiaFila = fila; //Copia a fila para iterar
+    //Copia a fila para iterar
+    std::queue<Processo*> copiaFila = fila; 
     while (!copiaFila.empty()) {
         Processo* processo = copiaFila.front();
         copiaFila.pop();
@@ -51,8 +53,9 @@ void Despachante::escalonar() {
     }
     //Tenta desbloquear processos
     desbloquear();
-    std::unordered_set<Processo*> processosAlocados;
 
+    //Set de processos alocados para cada quantum (evitando mesmo Processo ser executado em CPUs diferentes durante quantum)
+    std::unordered_set<Processo*> processosAlocados;
 
     for (size_t i = 0; i < cpusDisponiveis.size(); ++i) {
             if (!cpusDisponiveis[i] && !filaProntos.empty()) {
@@ -77,19 +80,32 @@ void Despachante::escalonar() {
                 //Marca CPU como ocupado
                 cpusDisponiveis[i] = true;
 
-                int tempoExecutado = std::min(quantum, processoAtual->getTempoRestante());
+                int tempoExecutado = std::min(quantum, processoAtual->getTempoRestanteCpu());
+                
                 processoAtual->executarCpu(tempoExecutado);
                 std::cout << "Processo #" << processoAtual->getId() 
                           <<  " executado por " << tempoExecutado << " u.t" 
-                          << ". Tempo restante: " << processoAtual->getTempoRestante() << "\n";
+                          << ". Tempo restante: " << processoAtual->getTempoRestanteCpu() << "\n";
 
                 //Tratar casos onde processo termina no meio de um quantum
                 // Checa se processo terminou
                 if (processoAtual->checarTermino()) {
-                    gerenciadorMemoria->liberaMemoria(processoAtual);
-                    std::cout << "Processo #" << processoAtual->getId() 
-                              << " finalizado e memória liberada.\n";
+                    
+                    //Se o processo já passou por fase de I/O
+                    if(processoAtual->getFezIo()){    
+                        gerenciadorMemoria->liberaMemoria(processoAtual);
+                        std::cout << "Processo #" << processoAtual->getId() 
+                                << " finalizado e memória liberada.\n";
+                        
+                    }
+                    //Caso não tenha feito I/O, tempoRestante = duracaoCpu2, adiciona na fila de bloqueados e push na fila
+                    else{
+                        processoAtual->setTempoRestanteCpu();
+                        filaBloqueados.push(processoAtual);
+                        processoAtual->setFezIo();
+                    }
                     liberarCPU(i);
+
                 } else {
                     //Caso ainda reste tempo, move processo para fila de prontos
                     filaProntos.push(processoAtual);
@@ -97,8 +113,7 @@ void Despachante::escalonar() {
                 }
             }
     }
-
-
+    
     //Visualização
     imprimirFila(filaProntos, "Fila de Prontos");
     imprimirFila(filaBloqueados, "Fila de Bloqueados");
@@ -115,6 +130,8 @@ void Despachante::liberarCPU(int cpuIndex) {
     }
 }
 
+//IMPLEMENTAR 22/12/24
+//Politica de Reordenamento Dinâmico
 void Despachante::desbloquear() {
     if (filaBloqueados.empty()) return;
 
@@ -141,12 +158,4 @@ void Despachante::desbloquear() {
             filaBloqueados.push(bloqueado);
         }
     }
-}
-
-std::queue<Processo*>& Despachante::getFilaProntos() {
-    return filaProntos;
-}
-
-std::queue<Processo*>& Despachante::getFilaBloqueados() {
-    return filaBloqueados;
 }

@@ -5,6 +5,7 @@
 class Despachante;
 #include "../include/Processo.h"
 #include "../include/Despachante.h"
+#include "../include/globals.h"
 
 
 class GerenciadorMemoria{

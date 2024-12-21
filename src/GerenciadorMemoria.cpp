@@ -1,5 +1,6 @@
 #include "../include/GerenciadorMemoria.h"
 #include "../include/Despachante.h"
+#include "../include/globals.h"
 #include "../include/Processo.h"
 #include <iostream>
 
@@ -23,7 +24,6 @@ bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
     }
     //Se não há bloco livre suficiente
     else{
-        std::cout << "Não há blocos livres suficientes para alocar!" << std::endl;
         return false;
     }
     tamanhoLivre -= tamanhoBloco;

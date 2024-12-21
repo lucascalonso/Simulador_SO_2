@@ -1,7 +1,6 @@
 CXX = /opt/homebrew/bin/g++-14
 
-CXXFLAGS = -std=c++11 $(shell wx-config --cxxflags) -I./include
-LDFLAGS = $(shell wx-config --libs)
+CXXFLAGS = -std=c++11 -I./include
 SRC = $(wildcard src/*.cpp)
 OBJDIR = obj
 BINDIR = bin

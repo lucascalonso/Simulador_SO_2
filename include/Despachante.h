@@ -5,6 +5,9 @@
 #include <queue>
 #include <vector>
 #include "GerenciadorMemoria.h"
+#include "globals.h"
+
+extern int tempoAtual;
 
 class GerenciadorMemoria;
 
@@ -19,8 +22,6 @@ private:
 
 public:
     Despachante() : cpusDisponiveis() {}
-    std::queue<Processo*>& getFilaProntos(); 
-    std::queue<Processo*>& getFilaBloqueados();
     void imprimirFila(const std::queue<Processo*>& fila, const std::string& nomeFila);
     explicit Despachante(int quantum,int cpusDisponiveis);
     void setGerenciadorMemoria(GerenciadorMemoria* gm);
