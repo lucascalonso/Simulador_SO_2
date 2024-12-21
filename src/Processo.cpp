@@ -28,9 +28,9 @@ std::string Processo::getEstadoString() const{
     }
 }
 
-void Processo::executarCpu(int tempo) {
+void Processo::executarCpu() {
     
-    tempoRestanteCpu -= tempo;
+    tempoRestanteCpu--;
     if (tempoRestanteCpu <= 0) {
         if(fezIo){
             alterarEstado(Estado::TERMINADO);
@@ -54,7 +54,7 @@ int Processo::getRam() const {return ram;}
 int Processo::getId() const { return id; }
 int Processo::getDuracaoCpu1() const { return duracaoCpu1; }
 int Processo::getDuracaoCpu2() const { return duracaoCpu2; }
-int Processo::getDuracaoIo() const { return duracaoIo; }
+int Processo::getDuracaoIo()  { return duracaoIo; }
 
 void Processo::alterarEstado(Estado novoEstado) {
     estado = novoEstado;
@@ -62,6 +62,10 @@ void Processo::alterarEstado(Estado novoEstado) {
 
 void Processo::setTempoRestanteCpu() {
     tempoRestanteCpu = duracaoCpu2;
+}
+
+void Processo::setTempoRestanteIo(){
+    duracaoIo--;
 }
 
 void Processo::atualizarTempoCpu1(int tempo) {

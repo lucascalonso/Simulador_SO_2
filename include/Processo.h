@@ -28,22 +28,24 @@ public:
     Processo(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram);
 
     int tempoChegada;
+    int tempoTermino;
+    int turnAroundTime;
     int getId() const;
     int getRam() const;
     bool getFezIo();
     int getDuracaoCpu1() const;
     int getDuracaoCpu2() const;
-    int getDuracaoIo() const;
+    int getDuracaoIo();
     int getTempoRestanteCpu();
     void alterarEstado(Estado novoEstado);
     void atualizarTempoCpu1(int tempo);
     void atualizarTempoCpu2(int tempo);
     void atualizarTempoIo(int tempo);
     std::string getEstadoString() const;
-    void executarCpu(int tempo);
+    void executarCpu();
     bool checarTermino();
     void setTempoRestanteCpu();
-    void setTempoRestanteCpu(int tempo);
+    void setTempoRestanteIo();
     void setTempoChegada(int tempo);
     int getTempoChegada();
     void setFezIo();

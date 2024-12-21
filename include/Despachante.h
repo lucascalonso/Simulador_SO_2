@@ -17,6 +17,7 @@ private:
     std::vector<bool> cpusDisponiveis;
     std::queue<Processo*> filaProntos;
     std::queue<Processo*> filaBloqueados;
+    std::queue<Processo*> filaAuxiliar;
     GerenciadorMemoria* gerenciadorMemoria;
     int quantum;
 
@@ -28,7 +29,8 @@ public:
     void adicionarPronto(Processo* processo);
     void adicionarBloqueado(Processo* processo);
     Processo* recuperarProcessoPorId(int processoId);
-    void desbloquear();
+    void desbloquearProntos();
+    void desbloquearAuxiliar();
     void escalonar();
     void liberarCPU(int cpuIndex);
 };

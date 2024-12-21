@@ -44,19 +44,29 @@ void Despachante::imprimirFila(const std::queue<Processo*>& fila, const std::str
     std::cout << std::endl;
 }
 
+
+//Tratar quantum corretamente
 void Despachante::escalonar() {
+
+    //Passou uma unidade de tempo
+    tempoAtual++;
     
     //Caso não tenha nenhum processo em ambas as filas, não há processos para executar
-    if (filaProntos.empty() && filaBloqueados.empty()) {
-        std::cout << "Nenhum processo pronto e a fila de bloqueados está vazia. Aguardando chegada de processos..\n";
+    if (filaProntos.empty() && filaBloqueados.empty() && filaAuxiliar.empty()) {
+        std::cout << "Aguardando chegada de processos..\n";
         return;
     }
-    //Tenta desbloquear processos
-    desbloquear();
 
     //Set de processos alocados para cada quantum (evitando mesmo Processo ser executado em CPUs diferentes durante quantum)
     std::unordered_set<Processo*> processosAlocados;
 
+    std::cout << "---------------------------------------------" << tempoAtual << " u.t decorridos------------------------------------------------------------\n\n";
+
+    //Tenta desbloquear processos nas filas
+    desbloquearProntos();
+    desbloquearAuxiliar();
+
+    //Para cada CPU, dequeue Processo e executa por 1 u.t
     for (size_t i = 0; i < cpusDisponiveis.size(); ++i) {
             if (!cpusDisponiveis[i] && !filaProntos.empty()) {
                 Processo* processoAtual = filaProntos.front();
@@ -79,29 +89,36 @@ void Despachante::escalonar() {
 
                 //Marca CPU como ocupado
                 cpusDisponiveis[i] = true;
-
-                int tempoExecutado = std::min(quantum, processoAtual->getTempoRestanteCpu());
                 
-                processoAtual->executarCpu(tempoExecutado);
-                std::cout << "Processo #" << processoAtual->getId() 
-                          <<  " executado por " << tempoExecutado << " u.t" 
-                          << ". Tempo restante: " << processoAtual->getTempoRestanteCpu() << "\n";
+                //POR ENQUANTO ELE SÓ DECREMENTA 1 U.T E MUDA ESTADO SE NECESSÁRIO
+                processoAtual->executarCpu();
 
-                //Tratar casos onde processo termina no meio de um quantum
+                std::cout << "Processo #" << processoAtual->getId() 
+                          <<  " executado na CPU #" << i+1
+                         << "\n";
+
                 // Checa se processo terminou
                 if (processoAtual->checarTermino()) {
                     
                     //Se o processo já passou por fase de I/O
                     if(processoAtual->getFezIo()){    
+                        processoAtual->tempoTermino = tempoAtual;
+                        processoAtual->turnAroundTime = processoAtual->tempoTermino - processoAtual->tempoChegada;
+
                         gerenciadorMemoria->liberaMemoria(processoAtual);
                         std::cout << "Processo #" << processoAtual->getId() 
-                                << " finalizado e memória liberada.\n";
+                                << " finalizado e memória liberada. Turnaround Time: "<< processoAtual->turnAroundTime 
+                                << "\n"; 
+                            
+                        
+                        //Para cálculo do Turn Around Time
+                        
                         
                     }
                     //Caso não tenha feito I/O, tempoRestante = duracaoCpu2, adiciona na fila de bloqueados e push na fila
                     else{
                         processoAtual->setTempoRestanteCpu();
-                        filaBloqueados.push(processoAtual);
+                        filaAuxiliar.push(processoAtual);
                         processoAtual->setFezIo();
                     }
                     liberarCPU(i);
@@ -113,10 +130,11 @@ void Despachante::escalonar() {
                 }
             }
     }
-    
+
     //Visualização
     imprimirFila(filaProntos, "Fila de Prontos");
     imprimirFila(filaBloqueados, "Fila de Bloqueados");
+    imprimirFila(filaAuxiliar, "Fila de Prontos Auxiliar");
     gerenciadorMemoria->visualizarMemoria();
 }
 
@@ -130,9 +148,8 @@ void Despachante::liberarCPU(int cpuIndex) {
     }
 }
 
-//IMPLEMENTAR 22/12/24
 //Politica de Reordenamento Dinâmico
-void Despachante::desbloquear() {
+void Despachante::desbloquearProntos() {
     if (filaBloqueados.empty()) return;
 
     size_t bloqueadosCount = filaBloqueados.size();
@@ -159,3 +176,37 @@ void Despachante::desbloquear() {
         }
     }
 }
+
+//Também segue Reordenamento DInâmico
+void Despachante::desbloquearAuxiliar(){
+    if(filaAuxiliar.empty()) return;
+
+    size_t auxiliarCount = filaAuxiliar.size();
+
+    for(size_t i = 0; i < auxiliarCount; i++){
+        Processo *auxiliar = filaAuxiliar.front();
+        filaAuxiliar.pop();
+
+        if (!auxiliar) {
+            std::cout << "Erro: Processo inválido encontrado na fila de prontos auxiliar.\n";
+            continue;
+        }
+
+        //Decrementa 1 de duracaoIo
+        auxiliar->setTempoRestanteIo();
+
+        //Se passou por todo o tempo de I/O
+        if(auxiliar->getDuracaoIo() == 0){
+            auxiliar->alterarEstado(Estado::PRONTO);
+            filaProntos.push(auxiliar);
+            std::cout << "Processo #" << auxiliar->getId() << " terminou I/O. Movido para fila de prontos.\n";
+
+        } else{
+            //Caso ainda precise ficar mais tempo em I/O
+            filaAuxiliar.push(auxiliar);
+        }
+    }
+}
+
+
+
