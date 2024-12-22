@@ -45,7 +45,7 @@ public:
     void executarCpu();
     bool checarTermino();
     void setTempoRestanteCpu();
-    void setTempoRestanteIo();
+    void decrementaTempoRestanteIo();
     void setTempoChegada(int tempo);
     int getTempoChegada();
     void setFezIo();

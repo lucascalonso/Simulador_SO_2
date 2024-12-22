@@ -7,21 +7,27 @@
 #include "GerenciadorMemoria.h"
 #include "globals.h"
 
+typedef struct CPU{
+    Processo *P = nullptr;
+    int count = 0;
+}CPU;
+
 extern int tempoAtual;
 
 class GerenciadorMemoria;
 
 class Despachante {
 private:
-    int cpusNums;
-    std::vector<bool> cpusDisponiveis;
+    CPU cpusDisponiveis[4];
     std::queue<Processo*> filaProntos;
     std::queue<Processo*> filaBloqueados;
     std::queue<Processo*> filaAuxiliar;
     GerenciadorMemoria* gerenciadorMemoria;
     int quantum;
+    int numCpus;
 
 public:
+
     Despachante() : cpusDisponiveis() {}
     void imprimirFila(const std::queue<Processo*>& fila, const std::string& nomeFila);
     explicit Despachante(int quantum,int cpusDisponiveis);
@@ -29,9 +35,7 @@ public:
     void adicionarPronto(Processo* processo);
     void adicionarBloqueado(Processo* processo);
     Processo* recuperarProcessoPorId(int processoId);
-    void desbloquearProntos();
-    void desbloquearAuxiliar();
+    void desbloquear();
     void escalonar();
-    void liberarCPU(int cpuIndex);
 };
 #endif

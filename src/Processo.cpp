@@ -64,7 +64,7 @@ void Processo::setTempoRestanteCpu() {
     tempoRestanteCpu = duracaoCpu2;
 }
 
-void Processo::setTempoRestanteIo(){
+void Processo::decrementaTempoRestanteIo(){
     duracaoIo--;
 }
 
