@@ -68,11 +68,13 @@ void Despachante::escalonar() {
         //Se tem processo no CPU executando por menos de 3 u.t
         if(processoAtual && cpusDisponiveis[i].count < quantum){
             processoAtual->executarCpu();
-            std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << "\n";
-            processosAlocados.insert(processoAtual);
             cpusDisponiveis[i].count++;
+            processosAlocados.insert(processoAtual);
+            std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << " Count: "<< cpusDisponiveis[i].count << "\n";
+            
+            
 
-            //Checa se terminou o processo
+            //Checa se o processo já executou por 1 quantum e não terminou
             if(cpusDisponiveis[i].count > 3 && !processoAtual->checarTermino()){
                 filaProntos.push(processoAtual);
                 cpusDisponiveis[i].P = nullptr;
@@ -97,7 +99,8 @@ void Despachante::escalonar() {
                 }
                 cpusDisponiveis[i].P = processoAtual;
                 processoAtual->executarCpu();
-                std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << "\n";
+                cpusDisponiveis[i].count = 1;
+                std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << " Count: "<< cpusDisponiveis[i].count << "\n";
                 processosAlocados.insert(processoAtual);
             }
 
@@ -111,8 +114,9 @@ void Despachante::escalonar() {
                     continue;
                 }
                 cpusDisponiveis[i].P = processoAtual;
+                cpusDisponiveis[i].count = 1;
                 processoAtual->executarCpu();
-                std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << "\n";
+                std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << " Count: "<< cpusDisponiveis[i].count << "\n";
                 processosAlocados.insert(processoAtual);
             }
 
