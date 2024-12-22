@@ -42,7 +42,6 @@ void GerenciadorMemoria::liberaMemoria(Processo* processo) {
             --paginasLiberadas;
         }
     }
-    std::cout << "Memória de " << tamanhoBloco << " MB liberada pelo Processo #" << processoId << "\n";
     tamanhoLivre += tamanhoBloco;
 }
 

@@ -68,19 +68,24 @@ void Despachante::escalonar() {
         //Se tem processo no CPU executando por menos de 3 u.t
         if(processoAtual && cpusDisponiveis[i].count < quantum){
             processoAtual->executarCpu();
+            std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << "\n";
             processosAlocados.insert(processoAtual);
             cpusDisponiveis[i].count++;
-        }
 
-        //Caso não tenha processo na CPU OU já tenha executado por 4 u.t
-        else if(!processoAtual || cpusDisponiveis[i].count > 3){
-            std::cout << "Buscando Processo nas filas..." << std::endl;
-            if(cpusDisponiveis[i].count > 3  && processosAlocados.find(processoAtual) != processosAlocados.end()){
+            //Checa se terminou o processo
+            if(cpusDisponiveis[i].count > 3 && !processoAtual->checarTermino()){
                 filaProntos.push(processoAtual);
                 cpusDisponiveis[i].P = nullptr;
                 cpusDisponiveis[i].count = 0;
+                continue;
             }
-        
+        }
+
+        //Caso não tenha processo na CPU
+        else if(!processoAtual){
+            
+            std::cout << "Buscando Processo nas filas para o CPU# " << i+1 << std::endl;
+            
             if(!filaAuxiliar.empty()){
     
                 processoAtual = filaAuxiliar.front();
@@ -92,6 +97,7 @@ void Despachante::escalonar() {
                 }
                 cpusDisponiveis[i].P = processoAtual;
                 processoAtual->executarCpu();
+                std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << "\n";
                 processosAlocados.insert(processoAtual);
             }
 
@@ -106,6 +112,7 @@ void Despachante::escalonar() {
                 }
                 cpusDisponiveis[i].P = processoAtual;
                 processoAtual->executarCpu();
+                std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << "\n";
                 processosAlocados.insert(processoAtual);
             }
 
@@ -114,9 +121,6 @@ void Despachante::escalonar() {
                     continue;
             } 
         }
-        std::cout << "Processo #" << processoAtual->getId() 
-                          <<  " executado na CPU #" << i+1
-                         << "\n";
 
         // Checa se processo terminou
         if (processoAtual->checarTermino()) {
@@ -133,7 +137,7 @@ void Despachante::escalonar() {
 
                 gerenciadorMemoria->liberaMemoria(processoAtual);
                 std::cout << "Processo #" << processoAtual->getId() 
-                          << " finalizado e memória liberada. Turnaround Time: "<< processoAtual->turnAroundTime 
+                          << " finalizado e " <<processoAtual->getRam() << " MB liberados. Turnaround Time: "<< processoAtual->turnAroundTime 
                           << "\n";     
             }
             //Caso não tenha feito I/O, tempoRestante = duracaoCpu2, adiciona na fila de bloqueados

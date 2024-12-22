@@ -20,17 +20,18 @@ int main() {
     despachante.adicionarPronto(new Processo(8, 2, 3, 1, 5618)); 
     despachante.adicionarPronto(new Processo(9, 8, 4, 8, 10096));  
     
-    char continua;
-
+    //char continua;
+    int run;
 
     //Simular botão da GUI para passo e outro p/ while com stop na thread 
     do{
         despachante.escalonar();
-        std::cout << "Digite y ou Y para continuar.\n";
-        std::cin >> continua;
+        //std::cout << "Digite y ou Y para continuar.\n";
+        //std::cin >> continua;
+        run++;
 
-    } while (continua == 'y' || continua == 'Y');
-    
+    } while (run < 69);
+    //continua == 'y' || continua == 'Y'
     
     std::cout << "Saindo...\n";
     return 0;
