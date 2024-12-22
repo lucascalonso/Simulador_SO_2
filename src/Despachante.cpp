@@ -89,7 +89,6 @@ void Despachante::escalonar(){
                 
                 int contaFila = 0;
                 processoAtual = filaAuxiliar.front();
-                processosAlocados.insert(processoAtual);
                 size_t tamanhoInicial = filaProntos.size();
                 filaAuxiliar.pop();
                 
@@ -113,9 +112,8 @@ void Despachante::escalonar(){
                     continue;
     
                 } else {
-                    std::cout << "Todos os processos possíveis já estão alocados nesse quantum." << std::endl;
+                    std::cout << "Todos os processos possíveis da fila Auxiliar já foram alocados nesse quantum." << std::endl;
                     processoAtual = nullptr;
-                    continue;
                 }    
             }
 
@@ -124,7 +122,6 @@ void Despachante::escalonar(){
                 
                 int contaFila = 0;
                 processoAtual = filaProntos.front();
-                processosAlocados.insert(processoAtual);
                 size_t tamanhoInicial = filaProntos.size();
                 filaProntos.pop();
 
@@ -147,7 +144,7 @@ void Despachante::escalonar(){
                     continue;
         
                 } else {
-                    std::cout << "Todos os processos possíveis já estão alocados nesse quantum." << std::endl;
+                    std::cout << "Todos os processos possíveis da fila Prontos já foram alocados nesse quantum." << std::endl;
                     continue;
                 }
             
