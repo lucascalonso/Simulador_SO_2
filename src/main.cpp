@@ -26,7 +26,6 @@ int main() {
     despachante.adicionarPronto(new Processo(9, 8, 4, 8, 10096));  
     
     char continua;
-    //int run;
 
     //Simular botão da GUI para passo e outro p/ while com stop na thread 
     do{
