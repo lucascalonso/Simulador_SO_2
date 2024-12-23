@@ -7,7 +7,13 @@
 GerenciadorMemoria::GerenciadorMemoria(int tamanhoTotal, Despachante* despachantePtr,int tamPaginas)
     : tamanhoTotal(tamanhoTotal), tamanhoLivre(tamanhoTotal), despachante(despachantePtr), tamPaginas(tamPaginas) 
     {
-        numPaginas = tamanhoTotal / tamPaginas;       //8192 quadros na MP
+        //8192 quadros na MP
+        numPaginas = tamanhoTotal / tamPaginas;       
+        
+        //Inicializar quadros MP como 0
+        for (int i = 0; i < numPaginas; ++i) {
+            memoria[i] = 0;
+        }
     }
 
 //Aloca memória de acordo com o tamanho solicitado
