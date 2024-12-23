@@ -42,6 +42,7 @@ public:
     void atualizarTempoCpu2(int tempo);
     void atualizarTempoIo(int tempo);
     std::string getEstadoString() const;
+    std::string getCor(int idProcesso);
     void executarCpu();
     bool checarTerminoDaFase();
     void setTempoRestanteCpu(int tempo);

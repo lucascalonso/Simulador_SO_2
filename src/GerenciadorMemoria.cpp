@@ -51,15 +51,26 @@ void GerenciadorMemoria::liberaMemoria(Processo* processo) {
     tamanhoLivre += tamanhoBloco;
 }
 
+std::string GerenciadorMemoria::getCor(int idProcesso) {
+    if (idProcesso == 0) {
+        //Cinza p/ memória livre
+        return "\033[90m"; 
+    }
+    //Define a cor
+    int cor = 31 + (idProcesso % 6);
+    return "\033[" + std::to_string(cor) + "m";
+}
 
 void GerenciadorMemoria::visualizarMemoria() {
     std::cout << std::endl;
     
-    const int paginasPorLinha = 128;  // Número de páginas por linha
+    //Número de páginas por linha
+    const int paginasPorLinha = 128;  
     
     for (int i = 0; i < numPaginas; i++) {
-        // Exibir status da página (IdProcesso ou L)
-        std::cout << (memoria[i] == 0 ? "0" : std::to_string(memoria[i]));
+
+        //Printa Id do processo com a cor correspondente
+        std::cout << getCor(memoria[i]) << (memoria[i] == 0 ? "0" : std::to_string(memoria[i])) << "\033[0m";
         
         // Adicionar quebra de linha a cada paginasPorLinha páginas
         if ((i + 1) % paginasPorLinha == 0) {

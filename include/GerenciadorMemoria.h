@@ -20,6 +20,7 @@ class GerenciadorMemoria{
     public:
         GerenciadorMemoria(int tamanhoTotal, Despachante* despachantePtr,int tamPaginas);
         int getNumPaginas();
+        std::string getCor(int idProcesso);
         void visualizarMemoria();
         bool alocarMemoria(int processoId, int tamanho);
         void liberaMemoria(Processo* processo);
