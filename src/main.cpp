@@ -36,7 +36,7 @@ int main() {
 
 
     } while (continua == 'y' || continua == 'Y');
-    //std::this_thread::sleep_for(5000);
+    //1
     
     std::cout << "Saindo...\n";
     return 0;
