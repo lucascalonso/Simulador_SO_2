@@ -9,7 +9,7 @@
 
 typedef struct CPU{
     Processo *P = nullptr;
-    int count = 0;
+    int tempo_executando_processo = 0;
 }CPU;
 
 extern int tempoAtual;

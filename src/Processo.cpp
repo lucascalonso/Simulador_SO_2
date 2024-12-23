@@ -36,7 +36,7 @@ void Processo::executarCpu() {
             alterarEstado(Estado::TERMINADO);
         }
         else{
-            alterarEstado(Estado::EM_ESPERA);
+            alterarEstado(Estado::BLOQUEADO);
         }
         
     } else if (estado == Estado::PRONTO) {
@@ -60,8 +60,8 @@ void Processo::alterarEstado(Estado novoEstado) {
     estado = novoEstado;
 }
 
-void Processo::setTempoRestanteCpu() {
-    tempoRestanteCpu = duracaoCpu2;
+void Processo::setTempoRestanteCpu(int tempo) {
+    tempoRestanteCpu = tempo;
 }
 
 void Processo::decrementaTempoRestanteIo(){
@@ -86,7 +86,7 @@ void Processo::setFezIo(){
     fezIo = true;
 }
 
-bool Processo::checarTermino(){
+bool Processo::checarTerminoDaFase(){
     if (getTempoRestanteCpu() <= 0){
         return true;
     }

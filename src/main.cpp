@@ -2,11 +2,16 @@
 #include "../include/GerenciadorMemoria.h"
 #include <iostream>
 #include "../include/globals.h"
+#include <thread>
+#include <chrono>
 
 int main() {
     
-    Despachante despachante(4,4);                                   //quantum 4 unidades de tempo e 4 Cpus
-    GerenciadorMemoria gerenciador (32*1024,&despachante,4);         //mudar para 32 GB no final. 4 MB por página
+    //Quantum 4 unidades de tempo e 4 Cpus
+    Despachante despachante(4,4);
+    
+    //32GB                                   
+    GerenciadorMemoria gerenciador (32*1024,&despachante,4);         
     despachante.setGerenciadorMemoria(&gerenciador);
 
     
@@ -28,10 +33,11 @@ int main() {
         despachante.escalonar();
         std::cout << "Digite y ou Y para continuar.\n";
         std::cin >> continua;
-        //run++;
+        //std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+
 
     } while (continua == 'y' || continua == 'Y');
-    //run
+    //std::this_thread::sleep_for(5000);
     
     std::cout << "Saindo...\n";
     return 0;

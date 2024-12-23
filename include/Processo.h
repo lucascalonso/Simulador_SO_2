@@ -43,8 +43,8 @@ public:
     void atualizarTempoIo(int tempo);
     std::string getEstadoString() const;
     void executarCpu();
-    bool checarTermino();
-    void setTempoRestanteCpu();
+    bool checarTerminoDaFase();
+    void setTempoRestanteCpu(int tempo);
     void decrementaTempoRestanteIo();
     void setTempoChegada(int tempo);
     int getTempoChegada();
