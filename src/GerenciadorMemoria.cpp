@@ -16,6 +16,11 @@ GerenciadorMemoria::GerenciadorMemoria(int tamanhoTotal, Despachante* despachant
         }
     }
 
+
+int GerenciadorMemoria::getMemoriaTotal() const { return tamanhoTotal; }
+
+int GerenciadorMemoria::getMemoriaDisponivel() { return tamanhoLivre; }
+
 //Aloca memória de acordo com o tamanho solicitado
 bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
     int paginasNecessarias = tamanhoBloco / tamPaginas;
@@ -37,6 +42,7 @@ bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
     return true;
 }
 
+//Trata processos suspensos e terminados
 void GerenciadorMemoria::liberaMemoria(Processo* processo) {
     int processoId = processo->getId();
     int tamanhoBloco = processo->getRam();
@@ -49,14 +55,13 @@ void GerenciadorMemoria::liberaMemoria(Processo* processo) {
         }
     }
     tamanhoLivre += tamanhoBloco;
+    if(processo->getEstadoString() == "TERMINADO") delete(processo);
 }
 
+//Filtro para colorir MP (Cinza p/ memória livre)
 std::string GerenciadorMemoria::getCor(int idProcesso) {
-    if (idProcesso == 0) {
-        //Cinza p/ memória livre
-        return "\033[90m"; 
-    }
-    //Define a cor
+    if (idProcesso == 0) return "\033[90m";
+    
     int cor = 31 + (idProcesso % 6);
     return "\033[" + std::to_string(cor) + "m";
 }

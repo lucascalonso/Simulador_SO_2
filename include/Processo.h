@@ -7,8 +7,9 @@
 enum Estado{
     PRONTO,
     EXECUTANDO,
-    EM_ESPERA,
     BLOQUEADO,
+    PRONTO_SUSPENSO,
+    BLOQUEADO_SUSPENSO,
     TERMINADO
 };
 
@@ -20,7 +21,6 @@ private:
     int duracaoCpu2;
     int duracaoIo;
     int tempoRestanteCpu;
-    int tempoRestanteIO;
     bool fezIo;
     Estado estado;
 

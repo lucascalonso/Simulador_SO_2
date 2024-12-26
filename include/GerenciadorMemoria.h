@@ -8,6 +8,7 @@ class Despachante;
 #include "../include/globals.h"
 
 
+
 class GerenciadorMemoria{
     private:
         int memoria[8192];
@@ -19,7 +20,9 @@ class GerenciadorMemoria{
 
     public:
         GerenciadorMemoria(int tamanhoTotal, Despachante* despachantePtr,int tamPaginas);
-        int getNumPaginas();
+        int getNumPaginas() const;
+        int getMemoriaTotal() const;
+        int getMemoriaDisponivel();
         std::string getCor(int idProcesso);
         void visualizarMemoria();
         bool alocarMemoria(int processoId, int tamanho);

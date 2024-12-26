@@ -4,17 +4,17 @@
 #include <iostream>
 
 Processo::Processo(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram)
-    : id(id), duracaoCpu1(duracaoCpu1), duracaoIo(duracaoIo), duracaoCpu2(duracaoCpu2), ram(ram), estado(Estado::PRONTO)
+    : id(id), duracaoCpu1(duracaoCpu1), duracaoIo(duracaoIo), duracaoCpu2(duracaoCpu2), ram(ram), estado(Estado::PRONTO), fezIo(false)
 {   
-    bool fezIO = false;
-    if(duracaoIo == 0){
+    tempoChegada = tempoAtual;
+
+    //Se Processo é CPU bound, seta Io como feito e soma duracaoCpu1 duracaoCpu2
+    if(duracaoIo <= 0){
         tempoRestanteCpu = duracaoCpu1+duracaoCpu2; 
         fezIo = true;
 
     } else tempoRestanteCpu = duracaoCpu1;
         
-    tempoChegada = tempoAtual;
-    
 }
 
 std::string Processo::getEstadoString() const{
@@ -22,26 +22,32 @@ std::string Processo::getEstadoString() const{
         case PRONTO: return "PRONTO";
         case EXECUTANDO: return "EXECUTANDO";
         case BLOQUEADO: return "BLOQUEADO";
-        case EM_ESPERA: return "EM ESPERA";
         case TERMINADO: return "TERMINADO";
+        case PRONTO_SUSPENSO: return "PRONTO_SUSPENSO";
+        case BLOQUEADO_SUSPENSO: return "BLOQUEADO_SUSPENSO";
         default: return "DESCONHECIDO";
     }
+}
+
+bool Processo::checarTerminoDaFase(){
+    if (getTempoRestanteCpu() <= 0){
+        return true;
+    }
+    return false;
 }
 
 void Processo::executarCpu() {
     
     tempoRestanteCpu--;
-    if (tempoRestanteCpu <= 0) {
+    //Se terminou uma fase de CPU, altera estado p/ ir pra fila correta
+    if (checarTerminoDaFase()) {
         if(fezIo){
             alterarEstado(Estado::TERMINADO);
         }
         else{
             alterarEstado(Estado::BLOQUEADO);
         }
-        
-    } else if (estado == Estado::PRONTO) {
-        alterarEstado(Estado::EXECUTANDO);
-    }
+    } else if (estado == Estado::PRONTO) alterarEstado(Estado::EXECUTANDO);
 }
 
 void Processo::setTempoChegada(int tempo){

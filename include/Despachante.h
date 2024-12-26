@@ -6,6 +6,7 @@
 #include <vector>
 #include "GerenciadorMemoria.h"
 #include "globals.h"
+#include <unordered_set>
 
 typedef struct CPU{
     Processo *P = nullptr;
@@ -21,6 +22,8 @@ private:
     CPU cpusDisponiveis[4];
     std::queue<Processo*> filaProntos;
     std::queue<Processo*> filaBloqueados;
+    std::queue<Processo*> filaBloqueadosSuspensos;
+    std::queue<Processo*> filaProntosSuspensos;
     std::queue<Processo*> filaAuxiliar;
     GerenciadorMemoria* gerenciadorMemoria;
     int quantum;
@@ -32,10 +35,18 @@ public:
     void imprimirFila(const std::queue<Processo*>& fila, const std::string& nomeFila);
     explicit Despachante(int quantum,int cpusDisponiveis);
     void setGerenciadorMemoria(GerenciadorMemoria* gm);
-    void adicionarPronto(Processo* processo);
+    void tentaAlocarProcesso(Processo* processo);
     void adicionarBloqueado(Processo* processo);
     Processo* recuperarProcessoPorId(int processoId);
-    void desbloquear();
+    void tentarAlocarProcessosSuspensos();
+    void decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocadosNoQuantum);
+    void decrementaBloqueados(std::unordered_set<Processo*>& processosAlocadosNoQuantum);
+    void desbloquearProntosSuspensos();
+    void verificaRealocacao();
+    bool desalocarBloqueadosParaProntosSuspensos(int memoriaNecessaria);
     void escalonar();
+    int desalocarAteNecessario(int memoriaNecessaria, std::vector<Processo*>& processosParaDesalocar);
+    void realocarProntosSuspensos(); 
+
 };
 #endif

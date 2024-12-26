@@ -14,16 +14,17 @@ int main() {
     GerenciadorMemoria gerenciador (32*1024,&despachante,4);         
     despachante.setGerenciadorMemoria(&gerenciador);
 
+    despachante.tentaAlocarProcesso(new Processo(1, 5, 8, 4, 12024));
+    despachante.tentaAlocarProcesso(new Processo(2, 3, 10, 10, 8048));
+    despachante.tentaAlocarProcesso(new Processo(3, 7, 0, 2, 1024));
+    despachante.tentaAlocarProcesso(new Processo(4, 10, 15, 5, 2048));  
+    despachante.tentaAlocarProcesso(new Processo(5, 4, 5, 3, 128));     
+    despachante.tentaAlocarProcesso(new Processo(6, 15, 10, 10, 8192)); 
+    despachante.tentaAlocarProcesso(new Processo(7, 12, 10, 8, 15000));  
+    despachante.tentaAlocarProcesso(new Processo(8, 2, 3, 1, 5618)); 
+    despachante.tentaAlocarProcesso(new Processo(9, 8, 4, 8, 10096));
     
-    despachante.adicionarPronto(new Processo(1, 5, 8, 4, 12024));
-    despachante.adicionarPronto(new Processo(2, 3, 10, 10, 8048));
-    despachante.adicionarPronto(new Processo(3, 7, 0, 2, 1024));
-    despachante.adicionarPronto(new Processo(4, 10, 15, 5, 2048));  
-    despachante.adicionarPronto(new Processo(5, 4, 5, 3, 128));     
-    despachante.adicionarPronto(new Processo(6, 15, 10, 10, 8192)); 
-    despachante.adicionarPronto(new Processo(7, 12, 10, 8, 15000));  
-    despachante.adicionarPronto(new Processo(8, 2, 3, 1, 5618)); 
-    despachante.adicionarPronto(new Processo(9, 8, 4, 8, 10096));  
+    
     
     char continua;
 
