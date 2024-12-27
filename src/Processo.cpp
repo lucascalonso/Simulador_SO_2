@@ -36,6 +36,7 @@ bool Processo::checarTerminoDaFase(){
     return false;
 }
 
+//Chamado para cada processo executado em uma das CPUs
 void Processo::executarCpu() {
     
     tempoRestanteCpu--;
@@ -90,11 +91,4 @@ bool Processo::getFezIo(){ return fezIo; }
 
 void Processo::setFezIo(){
     fezIo = true;
-}
-
-bool Processo::checarTerminoDaFase(){
-    if (getTempoRestanteCpu() <= 0){
-        return true;
-    }
-    return false;
 }

@@ -8,10 +8,10 @@
 
 Despachante::Despachante(int quantum,int numCpus) : quantum(quantum), numCpus(numCpus){}
 
-
+//Chamado na chegada de um processo e ao tentar alocar processos suspensos
 void Despachante::tentaAlocarProcesso(Processo* processo) {
 
-    //Prontos suspensos vão pra fila auxiliar
+    //Caso tenha memória disponível para alocar, vai pra fila auxiliar ou pronto
     if (gerenciadorMemoria->alocarMemoria(processo->getId(), processo->getRam())) {
         if(processo->getEstadoString() == "PRONTO_SUSPENSO"){
             std::cout << "Processo#" << processo->getId() << " inserido na fila de auxiliar."<< std::endl;
@@ -38,24 +38,25 @@ void Despachante::tentaAlocarProcesso(Processo* processo) {
     }
 }
 
+//Tenta alocar processos suspensos que ainda estão na fila
 void Despachante::tentarAlocarProcessosSuspensos() {
-    // Tenta alocar processos suspensos que ainda estão na fila
+    
     size_t tamanhoFila = filaProntosSuspensos.size();
     for (size_t i = 0; i < tamanhoFila; ++i) {
-        Processo* processo = filaProntosSuspensos.front();  // Obtém o primeiro processo da fila
-        filaProntosSuspensos.pop();  // Remove da fila
+        Processo* processo = filaProntosSuspensos.front();
+        filaProntosSuspensos.pop();  
 
-        // Tenta alocar o processo. Já insere de novo em filaProntosSuspensos caso não tenha memória!
+        //Já insere de novo em filaProntosSuspensos caso não tenha memória (final do método tentaAlocarProcesso)
         tentaAlocarProcesso(processo);
     }
 }
 
-
+//Validar as filas durante a simulação
 void Despachante::imprimirFila(const std::queue<Processo*>& fila, const std::string& nomeFila) {
     std::cout << nomeFila << ":\n";
     if (fila.empty()) return;
 
-    //Copia a fila para iterar
+    //Copia a fila para iterar sem alterar a estrutura da fila original
     std::queue<Processo*> copiaFila = fila; 
     while (!copiaFila.empty()) {
         Processo* processo = copiaFila.front();
@@ -76,27 +77,28 @@ void Despachante::escalonar(){
     //Passou uma unidade de tempo
     tempoAtual++;
 
-    //Interrompe loop 
+    //Flag para controlar se já tentou suspender bloqueados para alocar prontos suspensos
+    //evita loop infinito 
     bool flag = false;
 
     Processo* processoAtual;
-
-    //Prioriza inserir prontos Suspensos na fila auxiliar
     
-    
-    //Set de processos alocados para cada quantum (evitando que o mesmo Processo seja executado em CPUs diferentes durante u.t)
+    //Set de processos alocados nas CPUs
+    //Evita que o mesmo Processo seja executado em CPUs diferentes durante u.t
+    //Também controla quais processos terão seu tempo de I/O decrementado
+    //Se um processo executou em uma u.t e foi bloqueado, não pode ter seu duracaoIo decrementado nesse ciclo
     std::unordered_set<Processo*> processosAlocadosNoQuantum;
 
     std::cout << "---------------------------------------------" << tempoAtual << " u.t decorridos------------------------------------------------------------\n\n";
     
     tentarAlocarProcessosSuspensos();
 
-    //Para cada CPU, executa processo nele ou precisa buscar nas filas
+    //Para cada CPU, executa processo nele ou busca nas filas caso !processoAtual
     for (int i = 0; i < numCpus ; i++) {
         
         processoAtual = cpusDisponiveis[i].P;
         
-        //Se tem processo no CPU e não executou nessa u.t (pode ter sofrido timeout no CPU#1 e executar na CPU#2 caso não tenha o check do set )
+        //Se tem processo no CPU e não executou nessa u.t (pode ter sofrido timeout no CPU#1 e executar na CPU#2 caso não tenha o check do set)
         if(processoAtual && (processosAlocadosNoQuantum.find(processoAtual) == processosAlocadosNoQuantum.end())){
             processoAtual->executarCpu();
             cpusDisponiveis[i].tempo_executando_processo++;
@@ -114,10 +116,11 @@ void Despachante::escalonar(){
         //Caso não tenha processo na CPU, precisa buscar em uma das filas
         else{
             
-            //Se tem processo na fila auxiliar
+            //Prioriza buscar processo na fila auxiliar
             if(!filaAuxiliar.empty()){
                 std::cout << "CPU#" << i+1 << " Buscando Processo na fila Auxiliar " << std::endl;
                 
+                //contador para controlar se checou todos os processos da fila
                 int contaFila = 0;
                 processoAtual = filaAuxiliar.front();
                 size_t tamanhoInicial = filaProntos.size();
@@ -130,10 +133,10 @@ void Despachante::escalonar(){
                     filaAuxiliar.pop();
                     contaFila++;
                     if(contaFila >= tamanhoInicial) break;
-                    //Busca até encontrar processo que não esteja alocado ou percorra toda a fila
+                    //Busca até encontrar processo que não esteja alocado ou percorrar toda a fila
                 }
                 
-                //Se encontrou processo
+                //Se encontrou processo ainda não presente no set, vai executa-lo 
                 if(contaFila <= tamanhoInicial && (processosAlocadosNoQuantum.find(processoAtual) == processosAlocadosNoQuantum.end())){
                     cpusDisponiveis[i].P = processoAtual;
                     processosAlocadosNoQuantum.insert(processoAtual);
@@ -188,12 +191,11 @@ void Despachante::escalonar(){
                 }
             }
             checkFilasSuspensas:
-            // Tenta dealocar bloqueados para prontos suspensos poderem ser escalonados
+            // Tenta desalocar bloqueados para prontos suspensos poderem ir p/ prontos e escalonados
             if (!filaBloqueados.empty() && !filaProntosSuspensos.empty()) {
                 std::cout << "CPU #" << i + 1 
-                        << " buscando dealocar processos bloqueados para prontos suspensos.\n";
+                        << " buscando desalocar processos bloqueados para prontos suspensos.\n";
 
-                // Obtém o primeiro processo da fila de prontos suspensos
                 Processo* processoProntoSuspenso = filaProntosSuspensos.front();
                 int memoriaNecessaria = processoProntoSuspenso->getRam();
                 size_t countProntosSuspensos = filaProntosSuspensos.size();
@@ -201,15 +203,15 @@ void Despachante::escalonar(){
 
                 // Percorre a fila de prontos suspensos verificando condições
                 while (contaFila < countProntosSuspensos) {
-                    // Checa se o processo já foi processado no quantum atual
+                    //Checa se o processo já foi processado no quantum atual
                     if (processosAlocadosNoQuantum.count(processoProntoSuspenso) == 0) {
-                        // Tenta desalocar os bloqueados para liberar memória suficiente
+                        //Tenta desalocar os bloqueados para liberar memória suficiente
                         if (desalocarBloqueadosParaProntosSuspensos(memoriaNecessaria)) {
-                            break; // Sai do while se a desalocação foi bem-sucedida
+                            break;
                         }
                     }
 
-                    // Reinsere o processo no final da fila e tenta o pro próximo da fila
+                    // Reinsere o processo no final da fila e tenta o próximo da fila suspensos
                     filaProntosSuspensos.pop();
                     filaProntosSuspensos.push(processoProntoSuspenso);
                     processoProntoSuspenso = filaProntosSuspensos.front();
@@ -228,11 +230,11 @@ void Despachante::escalonar(){
                     goto tentaExecutarPronto;
 
                 } else {
-                    // Caso não consiga liberar memória suficiente, informa que a CPU ficará ociosa
+                    //Caso não consiga liberar memória suficiente, informa que a CPU ficará ociosa
                     std::cout << "Não foi possível liberar memória suficiente dos processos bloqueados para processos prontos suspensos.\n";
                 }
             }
-            
+            //CPU não conseguiu escalonar nenhum processo
             if(!processoAtual){
                 std::cout << "CPU#" << i+1 << " ocioso. Aguardando... " << std::endl;
                 continue;
@@ -241,7 +243,9 @@ void Despachante::escalonar(){
         
         
         checkaTermino:
-        // Checa se processo terminou a fase CPU
+        //A cada processo executado, precisa tratar caso sua fase de CPU tenha terminado
+        //Se ainda não fez I/O, vai para bloqueados
+        //Se fez I/O, terminado
         if (processoAtual->checarTerminoDaFase()) {
             
             //Reseta informações no CPU
@@ -249,6 +253,7 @@ void Despachante::escalonar(){
             cpusDisponiveis[i].tempo_executando_processo = 0;
             
             //Se o processo já passou por fase de I/O
+            //Deve ser terminado
             if(processoAtual->getFezIo()){    
                 
                 processoAtual->tempoTermino = tempoAtual;
@@ -259,10 +264,10 @@ void Despachante::escalonar(){
                           << " finalizado e " <<processoAtual->getRam() << " MB liberados. Turnaround Time: "<< processoAtual->turnAroundTime 
                           << "\n";
                 
-                //Como Estado do Processo é TERMINADO, será deletado abaixo
+                //Como Estado do Processo é TERMINADO, será deletado no método abaixo
                 gerenciadorMemoria->liberaMemoria(processoAtual);
             
-            //Caso não tenha feito I/O, tempoRestante = duracaoCpu2, adiciona na fila de bloqueados                   
+            //Caso não tenha feito I/O, tempoRestanteCpu = duracaoCpu2 e adiciona na fila de bloqueados                   
             } else {
                 std::cout << "Processo #" << processoAtual->getId() 
                           << " foi para I/O "  
@@ -276,10 +281,11 @@ void Despachante::escalonar(){
         }
     }
     //Decrementa 1 u.t de processos em I/O que não foram executados nessa u.t
+    //Set é passado para controlar quais processos serão decrementados
     decrementaBloqueados(processosAlocadosNoQuantum);
     decrementaBloqueadosSuspensos(processosAlocadosNoQuantum);
 
-    //Visualização
+    //Visualização das filas e da MP
     imprimirFila(filaProntos, "Fila de Prontos");
     imprimirFila(filaBloqueados, "Fila de Bloqueados");
     imprimirFila(filaProntosSuspensos, "Fila de Prontos Suspensos");
@@ -292,9 +298,8 @@ void Despachante::setGerenciadorMemoria(GerenciadorMemoria* gm) {
     gerenciadorMemoria = gm;
 }
 
-//Simplesmente decrementa tempo dos processos bloqueados suspensos, mandando pra fila prontos suspensos caso termine I/O.
+//Decrementa tempo dos processos bloqueados suspensos, mandando pra fila prontos suspensos caso termine I/O.
 //Tem que executar esse método no final do quantum, após execução dos CPUs e pular iteração caso o processo esteja no set.
-//Passar o set como parâmetro
 void Despachante::decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocadosNoQuantum) {
     if (filaBloqueadosSuspensos.empty()) return;
 
@@ -360,26 +365,14 @@ void Despachante::decrementaBloqueados(std::unordered_set<Processo*>& processosA
     }
 }
 
-void Despachante::verificaRealocacao() {
-    // Vai tentar desalocar bloqueados para liberar memória para os prontos suspensos
-    Processo* processoProntoSuspenso = filaProntosSuspensos.front();
-    int memoriaNecessaria = processoProntoSuspenso->getRam();
-
-    // Tenta desalocar processos da fila de Bloqueados
-    if (desalocarBloqueadosParaProntosSuspensos(memoriaNecessaria)) {
-        // Após desalocar, tenta realocar os prontos suspensos
-        realocarProntosSuspensos();
-    } else {
-        std::cout << "Memória insuficiente para realocar processos da fila de Prontos Suspensos.\n";
-    }
-}
 
 
-
+//Método ordena array de processos bloqueados por duracaoIo, dando preferência para os com maior duração
+//Suspende esses processos até atingir a memória necessária para alocar os processos prontos suspensos
 int Despachante::desalocarAteNecessario(int memoriaNecessaria, std::vector<Processo*>& processosParaDesalocar) {
     int memoriaLiberada = 0;
 
-    // Ordena os processos pelo tempo restante de I/O
+    //Ordena os processos pelo tempo restante de I/O
     std::sort(processosParaDesalocar.begin(), processosParaDesalocar.end(),
               [](Processo* a, Processo* b) {
                   return a->getDuracaoIo() > b->getDuracaoIo();
@@ -402,29 +395,29 @@ int Despachante::desalocarAteNecessario(int memoriaNecessaria, std::vector<Proce
     }
     
     //Se sobraram processos bloqueados que não foram necessários, reinserir na filaBloqueados
-    if (!processosParaDesalocar.empty()) {
+    if (!processosParaDesalocar.empty()){
     
-    // Reinserir os processos que não foram desalocados de volta na fila de bloqueados
-    for (Processo* processo : processosParaDesalocar) {
-        
-        // Verifica se o processo ainda está no vetor após a desalocação
-        if (processo->getEstadoString() != "BLOQUEADO_SUSPENSO") {
-            filaBloqueados.push(processo);
-            std::cout << "Processo #" << processo->getId()
-                      << " reinserido na fila de bloqueados. \n";
+        //Reinserir os processos que não foram desalocados de volta na fila de bloqueados
+        for (Processo* processo : processosParaDesalocar) {
+            
+            //Verifica se o processo ainda está no vetor após a desalocação
+            if (processo->getEstadoString() != "BLOQUEADO_SUSPENSO") {
+                filaBloqueados.push(processo);
+                std::cout << "Processo #" << processo->getId()
+                        << " reinserido na fila de bloqueados. \n";
+            }
         }
     }
-}
 
     return memoriaLiberada;
 }
 
+//Método percorre fila prontosuspensos e aloca quantos conseguir para prontos
 void Despachante::realocarProntosSuspensos() {
     
     while (!filaProntosSuspensos.empty()) {
         Processo* processo = filaProntosSuspensos.front();
 
-        // Aloca a memória necessária para o processo
         if(gerenciadorMemoria->alocarMemoria(processo->getId(), processo->getRam())){
             processo->alterarEstado(Estado::PRONTO);
             filaProntosSuspensos.pop();
@@ -437,7 +430,7 @@ void Despachante::realocarProntosSuspensos() {
     }
 }
 
-
+//Método calcula se 
 bool Despachante::desalocarBloqueadosParaProntosSuspensos(int memoriaNecessaria) {
     int memoriaTotalDesalocavel = 0;
     std::vector<Processo*> processosParaDesalocar;
@@ -469,203 +462,3 @@ bool Despachante::desalocarBloqueadosParaProntosSuspensos(int memoriaNecessaria)
     int memoriaLiberada = desalocarAteNecessario(memoriaNecessaria, processosParaDesalocar);
     return memoriaLiberada >= memoriaNecessaria;
 }
-
-
-/*
-//Método principal do Simulador
-void Despachante::escalonar(){
-
-    //Passou uma unidade de tempo
-    tempoAtual++;
-
-    //Interrompe loop 
-    bool flag = false;
-
-    Processo* processoAtual;
-
-    //Prioriza inserir prontos Suspensos na fila auxiliar
-    
-    
-    //Set de processos alocados para cada quantum (evitando que o mesmo Processo seja executado em CPUs diferentes durante u.t)
-    std::unordered_set<Processo*> processosAlocadosNoQuantum;
-
-    std::cout << "---------------------------------------------" << tempoAtual << " u.t decorridos------------------------------------------------------------\n\n";
-    
-    tentarAlocarProcessosSuspensos();
-
-    //Para cada CPU, executa processo nele ou precisa buscar nas filas
-    for (int i = 0; i < numCpus ; i++) {
-        
-        processoAtual = cpusDisponiveis[i].P;
-        
-        //Se tem processo no CPU e não executou nessa u.t (pode ter sofrido timeout no CPU#1 e executar na CPU#2 caso não tenha o check do set )
-        if(processoAtual && (processosAlocadosNoQuantum.find(processoAtual) == processosAlocadosNoQuantum.end())){
-            processoAtual->executarCpu();
-            cpusDisponiveis[i].tempo_executando_processo++;
-            processosAlocadosNoQuantum.insert(processoAtual);
-            std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << " Count: "<< cpusDisponiveis[i].tempo_executando_processo << "\n";
-            
-            //Checa se o processo já executou por 1 quantum e não terminou
-            if(cpusDisponiveis[i].tempo_executando_processo == quantum  && !processoAtual->checarTerminoDaFase()){
-                filaProntos.push(processoAtual);
-                cpusDisponiveis[i].P = nullptr;
-                cpusDisponiveis[i].tempo_executando_processo = 0;
-            }
-        }
-
-        //Caso não tenha processo na CPU, precisa buscar em uma das filas
-        else{
-            
-            //Se tem processo na fila auxiliar
-            if(!filaAuxiliar.empty()){
-                std::cout << "CPU#" << i+1 << " Buscando Processo na fila Auxiliar " << std::endl;
-                
-                int contaFila = 0;
-                processoAtual = filaAuxiliar.front();
-                size_t tamanhoInicial = filaProntos.size();
-                filaAuxiliar.pop();
-                
-                //Se o processo está no set, já está alocado a uma CPU nesse quantum.
-                while ((processosAlocadosNoQuantum.find(processoAtual) != processosAlocadosNoQuantum.end()) && contaFila < tamanhoInicial) {
-                    filaAuxiliar.push(processoAtual);
-                    processoAtual = filaAuxiliar.front();
-                    filaAuxiliar.pop();
-                    contaFila++;
-                    if(contaFila >= tamanhoInicial) break;
-                    //Busca até encontrar processo que não esteja alocado ou percorra toda a fila
-                }
-                
-                //Se encontrou processo
-                if(contaFila <= tamanhoInicial && (processosAlocadosNoQuantum.find(processoAtual) == processosAlocadosNoQuantum.end())){
-                    cpusDisponiveis[i].P = processoAtual;
-                    processosAlocadosNoQuantum.insert(processoAtual);
-                    processoAtual->executarCpu();
-                    cpusDisponiveis[i].tempo_executando_processo = 1;
-                    std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << " Count: "<< cpusDisponiveis[i].tempo_executando_processo << "\n";
-                    goto checkaTermino;
-
-                } else {
-                    std::cout << "Todos os processos possíveis da fila auxiliar já foram alocados nesse quantum." << std::endl;
-                    filaAuxiliar.push(processoAtual);
-                    processoAtual = nullptr;
-                }    
-            }
-
-            if(!filaProntos.empty()){
-                std::cout << "CPU#" << i+1 << " Buscando Processo na fila Prontos " << std::endl;
-                
-                tentaExecutarPronto:
-                int contaFila = 0;
-                processoAtual = filaProntos.front();
-                size_t tamanhoInicial = filaProntos.size();
-                filaProntos.pop();
-
-                //Se o processo está no set, já está alocado a uma CPU nesse quantum.
-                while ((processosAlocadosNoQuantum.find(processoAtual) != processosAlocadosNoQuantum.end()) && contaFila < tamanhoInicial) {
-                    filaProntos.push(processoAtual);
-                    processoAtual = filaProntos.front();
-                    filaProntos.pop();
-                    contaFila++;
-                    if(contaFila>=tamanhoInicial) break;
-                    //Busca até encontrar processo que não esteja alocado ou percorra toda a fila
-                }
-                //Se encontrou processo
-                if(contaFila <= tamanhoInicial && (processosAlocadosNoQuantum.find(processoAtual) == processosAlocadosNoQuantum.end())){
-                    cpusDisponiveis[i].P = processoAtual;
-                    processosAlocadosNoQuantum.insert(processoAtual);
-                    processoAtual->executarCpu();
-                    cpusDisponiveis[i].tempo_executando_processo = 1;
-                    std::cout << "Processo #" << processoAtual->getId() <<  " executado na CPU #" << i+1 << " Count: "<< cpusDisponiveis[i].tempo_executando_processo << "\n";
-                    goto checkaTermino;
-
-                } else {
-                    std::cout << "Todos os processos possíveis da fila Prontos já foram alocados nesse quantum." << std::endl;
-                    filaProntos.push(processoAtual);
-                    processoAtual = nullptr;
-                    if(flag){
-                        std::cout << "CPU#" << i+1 << " rodou flag e não conseguiu alocar nenhum processo " << std::endl;
-                        continue;
-                    } 
-                    else goto checkFilasSuspensas;
-                }
-            }
-
-            checkFilasSuspensas:
-            //Vai tentar dealocar bloqueados para os prontos suspensos poderem ser escalonados    
-            if(!filaBloqueados.empty() && !filaProntosSuspensos.empty()){
-                std::cout << "CPU #" << i+1 
-                                << " buscando dealocar processos bloqueados para prontos suspensos.\n";
-                
-                // Obtém o primeiro processo da fila de prontos suspensos
-                Processo* processoProntoSuspenso = filaProntosSuspensos.front();
-                int memoriaNecessaria = processoProntoSuspenso->getRam();
-
-                // Tenta desalocar processos da fila de bloqueados para liberar memória suficiente
-                if (desalocarBloqueadosParaProntosSuspensos(memoriaNecessaria)) {
-                    // Caso consiga desalocar, realoca o processo de prontos suspensos para prontos
-                    realocarProntosSuspensos();
-                    std::cout << "Processo #" << processoProntoSuspenso->getId() 
-                                << " movido de prontos suspensos para prontos.\n";
-                    
-                    flag = true;
-                    goto tentaExecutarPronto;
-
-                } else {
-                // Caso não consiga liberar memória suficiente, informa que a CPU ficará ociosa
-                    std::cout << "Não foi possível liberar memória suficiente dos procesoss bloqueados para processos prontos suspensos.\n";
-                    std::cout << "CPU#" << i+1 << " ociosa." << std::endl;
-                }
-            }
-            if(!processoAtual){
-                std::cout << "CPU#" << i+1 << " ocioso. Aguardando... " << std::endl;
-                continue;
-            } 
-        }
-        
-        
-        checkaTermino:
-        // Checa se processo terminou a fase CPU
-        if (processoAtual->checarTerminoDaFase()) {
-            
-            //Reseta informações no CPU
-            cpusDisponiveis[i].P = nullptr;
-            cpusDisponiveis[i].tempo_executando_processo = 0;
-            
-            //Se o processo já passou por fase de I/O
-            if(processoAtual->getFezIo()){    
-                
-                processoAtual->tempoTermino = tempoAtual;
-                processoAtual->turnAroundTime = processoAtual->tempoTermino - processoAtual->tempoChegada;
-                processoAtual->alterarEstado(Estado::TERMINADO);
-
-                std::cout << "Processo #" << processoAtual->getId() 
-                          << " finalizado e " <<processoAtual->getRam() << " MB liberados. Turnaround Time: "<< processoAtual->turnAroundTime 
-                          << "\n";
-                gerenciadorMemoria->liberaMemoria(processoAtual);
-            
-            //Caso não tenha feito I/O, tempoRestante = duracaoCpu2, adiciona na fila de bloqueados                   
-            } else {
-                std::cout << "Processo #" << processoAtual->getId() 
-                          << " foi para I/O "  
-                          << "\n";
-                
-                processoAtual->alterarEstado(Estado::BLOQUEADO);
-                processoAtual->setTempoRestanteCpu(processoAtual->getDuracaoCpu2());
-                filaBloqueados.push(processoAtual);
-                processoAtual->setFezIo();
-            }
-        }
-    }
-    //Decrementa 1 u.t de processos em I/O que não foram executados nessa u.t
-    decrementaBloqueados(processosAlocadosNoQuantum);
-    decrementaBloqueadosSuspensos(processosAlocadosNoQuantum);
-
-    //Visualização
-    imprimirFila(filaProntos, "Fila de Prontos");
-    imprimirFila(filaBloqueados, "Fila de Bloqueados");
-    imprimirFila(filaProntosSuspensos, "Fila de Prontos Suspensos");
-    imprimirFila(filaBloqueadosSuspensos, "Fila de Bloqueados Suspensos");
-    imprimirFila(filaAuxiliar, "Fila de Prontos Auxiliar");
-    gerenciadorMemoria->visualizarMemoria();
-}
-*/

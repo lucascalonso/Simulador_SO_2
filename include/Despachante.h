@@ -42,7 +42,6 @@ public:
     void decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocadosNoQuantum);
     void decrementaBloqueados(std::unordered_set<Processo*>& processosAlocadosNoQuantum);
     void desbloquearProntosSuspensos();
-    void verificaRealocacao();
     bool desalocarBloqueadosParaProntosSuspensos(int memoriaNecessaria);
     void escalonar();
     int desalocarAteNecessario(int memoriaNecessaria, std::vector<Processo*>& processosParaDesalocar);
