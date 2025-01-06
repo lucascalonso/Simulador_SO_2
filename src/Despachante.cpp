@@ -74,8 +74,6 @@ void Despachante::imprimirFila(const std::queue<Processo*>& fila, const std::str
 //Método principal do Simulador
 void Despachante::escalonar(){
 
-    //Passou uma unidade de tempo
-    tempoAtual++;
 
     //Flag para controlar se já tentou suspender bloqueados para alocar prontos suspensos
     //evita loop infinito 

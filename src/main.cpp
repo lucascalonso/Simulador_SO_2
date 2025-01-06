@@ -2,43 +2,42 @@
 #include "../include/GerenciadorMemoria.h"
 #include <iostream>
 #include "../include/globals.h"
+#include "../include/GeradorDeProcessos.h"
 #include <thread>
 #include <chrono>
+#include "../include/GeradorDeProcessos.h"
 
 int main() {
-    
-    //Quantum 4 unidades de tempo e 4 Cpus
-    Despachante despachante(4,4);
-    
-    //32GB                                   
-    GerenciadorMemoria gerenciador (32*1024,&despachante,4);         
+    Despachante despachante(4, 4);
+    GerenciadorMemoria gerenciador(32 * 1024, &despachante, 4);
     despachante.setGerenciadorMemoria(&gerenciador);
 
-    despachante.tentaAlocarProcesso(new Processo(1, 5, 8, 4, 12024));
-    despachante.tentaAlocarProcesso(new Processo(2, 3, 10, 10, 8048));
-    despachante.tentaAlocarProcesso(new Processo(3, 7, 0, 2, 1024));
-    despachante.tentaAlocarProcesso(new Processo(4, 10, 15, 5, 2048));  
-    despachante.tentaAlocarProcesso(new Processo(5, 4, 5, 3, 128));     
-    despachante.tentaAlocarProcesso(new Processo(6, 15, 10, 10, 8192)); 
-    despachante.tentaAlocarProcesso(new Processo(7, 12, 10, 8, 15000));  
-    despachante.tentaAlocarProcesso(new Processo(8, 2, 3, 1, 5618)); 
-    despachante.tentaAlocarProcesso(new Processo(9, 8, 4, 8, 10096));
-    
-    
-    
+    GeradorDeProcessos gerador(1);
+
+    int tempoParaProximo = gerador.tempoParaProximo();
+
     char continua;
 
-    //Simular botão da GUI para passo e outro p/ while com stop na thread 
-    do{
+    do {
+        // Simula chegada de novos processos
+        if (tempoAtual >= tempoParaProximo) {
+            Processo* novoProcesso = gerador.gerarProximoProcesso();
+            despachante.tentaAlocarProcesso(novoProcesso);
+
+            std::cout << "Novo Processo Gerado - ID: " << novoProcesso->getId()
+                      << ", RAM: " << novoProcesso->getRam() << " MB\n";
+
+            tempoParaProximo = tempoAtual + gerador.tempoParaProximo();
+        }
         despachante.escalonar();
+
+        std::cout << "Tempo Atual: " << tempoAtual << "\n";
         std::cout << "Digite y ou Y para continuar.\n";
         std::cin >> continua;
-        //std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
-
+        tempoAtual++;
     } while (continua == 'y' || continua == 'Y');
-    //1
-    
+
     std::cout << "Saindo...\n";
     return 0;
 }
