@@ -31,7 +31,6 @@ int main() {
 
         //Executar o escalonador e avançar o tempo
         despachante.escalonar();
-        std::cout << "Tempo Atual: " << tempoAtual << "\n";
         tempoAtual++;
 
 
