@@ -16,6 +16,7 @@ private:
 public:
     GeradorDeProcessos(double lambda, int seed = std::time(nullptr));
 
+    std::vector<Processo*>gerarProcessos();
     Processo* gerarProximoProcesso();
     int tempoParaProximo();
 };

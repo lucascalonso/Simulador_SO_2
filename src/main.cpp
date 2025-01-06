@@ -5,38 +5,39 @@
 #include "../include/GeradorDeProcessos.h"
 #include <thread>
 #include <chrono>
-#include "../include/GeradorDeProcessos.h"
+
 
 int main() {
     Despachante despachante(4, 4);
     GerenciadorMemoria gerenciador(32 * 1024, &despachante, 4);
     despachante.setGerenciadorMemoria(&gerenciador);
 
-    GeradorDeProcessos gerador(1);
+    //lambda = 0.5 (em média,  um processo novo a cada 2 u.t)
+    GeradorDeProcessos gerador(0.5);
 
     int tempoParaProximo = gerador.tempoParaProximo();
 
     char continua;
 
-    do {
-        // Simula chegada de novos processos
-        if (tempoAtual >= tempoParaProximo) {
-            Processo* novoProcesso = gerador.gerarProximoProcesso();
-            despachante.tentaAlocarProcesso(novoProcesso);
+    while(true) {
+        
+        //Gera processos 
+        std::vector<Processo*> novosProcessos = gerador.gerarProcessos();
 
-            std::cout << "Novo Processo Gerado - ID: " << novoProcesso->getId()
-                      << ", RAM: " << novoProcesso->getRam() << " MB\n";
-
-            tempoParaProximo = tempoAtual + gerador.tempoParaProximo();
+        //Alocar cada novo processo no despachante
+        for (auto processo : novosProcessos) {
+            despachante.tentaAlocarProcesso(processo);
         }
+
+        //Executar o escalonador e avançar o tempo
         despachante.escalonar();
-
         std::cout << "Tempo Atual: " << tempoAtual << "\n";
-        std::cout << "Digite y ou Y para continuar.\n";
-        std::cin >> continua;
-
         tempoAtual++;
-    } while (continua == 'y' || continua == 'Y');
+
+
+        //Pausa de n milisegundos
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    }
 
     std::cout << "Saindo...\n";
     return 0;

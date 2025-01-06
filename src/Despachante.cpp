@@ -34,7 +34,7 @@ void Despachante::tentaAlocarProcesso(Processo* processo) {
 
         processo->alterarEstado(Estado::PRONTO_SUSPENSO);
         filaProntosSuspensos.push(processo);
-        std::cout << "Processo#" << processo->getId() << " alocado na fila de prontos suspensos. Memória insuficiente" << std::endl;
+        std::cout << "Processo#" << processo->getId() << " inserido na fila de prontos suspensos. Memória insuficiente" << std::endl;
     }
 }
 
@@ -144,7 +144,7 @@ void Despachante::escalonar(){
                     goto checkaTermino;
 
                 } else {
-                    std::cout << "Todos os processos possíveis da fila auxiliar já foram alocados nesse quantum." << std::endl;
+                    std::cout << "Todos os processos possíveis da fila auxiliar já foram executados nesse quantum." << std::endl;
                     filaAuxiliar.push(processoAtual);
                     processoAtual = nullptr;
                 }    
@@ -178,11 +178,11 @@ void Despachante::escalonar(){
                     goto checkaTermino;
 
                 } else {
-                    std::cout << "Todos os processos possíveis da fila Prontos já foram alocados nesse quantum." << std::endl;
+                    std::cout << "Todos os processos possíveis da fila Prontos já foram executados nesse quantum." << std::endl;
                     filaProntos.push(processoAtual);
                     processoAtual = nullptr;
                     if(flag){
-                        std::cout << "CPU#" << i+1 << " rodou flag e não conseguiu alocar nenhum processo " << std::endl;
+                        std::cout << "CPU#" << i+1 << " rodou flag e não conseguiu escalonar nenhum processo " << std::endl;
                         continue;
                     } 
                     else goto checkFilasSuspensas;
@@ -422,7 +422,7 @@ void Despachante::realocarProntosSuspensos() {
             filaProntos.push(processo);
 
             std::cout << "Processo #" << processo->getId()
-                    << " realocado para prontos. "
+                    << " movidodo para fila de prontos. "
                     << "Memória utilizada: " << processo->getRam() << " MB.\n";
         } else break;
     }

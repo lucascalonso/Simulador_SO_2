@@ -2,6 +2,7 @@
 #include "../include/GerenciadorMemoria.h"
 #include "../include/globals.h"
 #include <iostream>
+#include <thread>
 
 Processo::Processo(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram)
     : id(id), duracaoCpu1(duracaoCpu1), duracaoIo(duracaoIo), duracaoCpu2(duracaoCpu2), ram(ram), estado(Estado::PRONTO), fezIo(false)
