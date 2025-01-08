@@ -15,10 +15,6 @@ int main() {
     //lambda = 0.5 (em média,  um processo novo a cada 2 u.t)
     GeradorDeProcessos gerador(0.5);
 
-    int tempoParaProximo = gerador.tempoParaProximo();
-
-    char continua;
-
     while(true) {
         
         //Gera processos 

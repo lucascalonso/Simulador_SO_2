@@ -23,26 +23,22 @@ Processo* GeradorDeProcessos::gerarProximoProcesso() {
 std::vector<Processo*> GeradorDeProcessos::gerarProcessos() {
     std::vector<Processo*> novosProcessos;
 
-    // Distribuição de Poisson para o número de chegadas no intervalo
+    //Distribuição de Poisson para o número de chegadas no intervalo
     std::poisson_distribution<int> poissonDistrib(lambda);
 
-    // Número de processos que chegam neste intervalo
+    //Número de processos que chegam neste intervalo
     int numeroDeProcessos = poissonDistrib(generator);
 
     for (int i = 0; i < numeroDeProcessos; ++i) {
-        // Gera os atributos do processo
+        //Gera os atributos do processo
         int duracaoCpu1 = distDuracao(generator);
         int duracaoIo = distDuracao(generator);
         int duracaoCpu2 = distDuracao(generator);
         int ram = distRam(generator);
 
-        // Cria o processo com ID único e adiciona ao vetor
+        //Cria o processo com ID único e adiciona ao vetor
         novosProcessos.push_back(new Processo(++ultimoId, duracaoCpu1, duracaoIo, duracaoCpu2, ram));
     }
 
     return novosProcessos;
-}
-
-int GeradorDeProcessos::tempoParaProximo() {
-    return static_cast<int>(expDistrib(generator));
 }

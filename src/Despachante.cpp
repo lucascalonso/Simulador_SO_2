@@ -19,7 +19,7 @@ void Despachante::tentaAlocarProcesso(Processo* processo) {
             return;
         }
         
-        std::cout << "Processo#" << processo->getId() << " alocado na fila de prontos" << std::endl;
+        std::cout << "Processo#" << processo->getId() << " inserido na fila de prontos" << std::endl;
         processo->alterarEstado(Estado::PRONTO);
         filaProntos.push(processo);
 
@@ -150,6 +150,7 @@ void Despachante::escalonar(){
                 }    
             }
 
+            //Como não achou processo possível na fila auxiliar, busca na fila de prontos
             if(!filaProntos.empty()){
                 std::cout << "CPU#" << i+1 << " Buscando Processo na fila Prontos " << std::endl;
                 
@@ -188,6 +189,7 @@ void Despachante::escalonar(){
                     else goto checkFilasSuspensas;
                 }
             }
+            
             checkFilasSuspensas:
             // Tenta desalocar bloqueados para prontos suspensos poderem ir p/ prontos e escalonados
             if (!filaBloqueados.empty() && !filaProntosSuspensos.empty()) {
@@ -362,8 +364,6 @@ void Despachante::decrementaBloqueados(std::unordered_set<Processo*>& processosA
         }
     }
 }
-
-
 
 //Método ordena array de processos bloqueados por duracaoIo, dando preferência para os com maior duração
 //Suspende esses processos até atingir a memória necessária para alocar os processos prontos suspensos

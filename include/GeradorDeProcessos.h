@@ -18,7 +18,6 @@ public:
 
     std::vector<Processo*>gerarProcessos();
     Processo* gerarProximoProcesso();
-    int tempoParaProximo();
 };
 
 #endif
