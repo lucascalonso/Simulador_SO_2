@@ -1,5 +1,6 @@
-#include "../include/GerenciadorMemoria.h"
 #include "../include/Despachante.h"
+#include "../include/GerenciadorMemoria.h"
+#include "../include/GeradorDeProcessos.h"
 #include "../include/globals.h"
 #include "../include/Processo.h"
 #include <iostream>
@@ -43,7 +44,7 @@ bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
 }
 
 //Trata processos suspensos e terminados
-void GerenciadorMemoria::liberaMemoria(Processo* processo) {
+void GerenciadorMemoria::liberaMemoria(Processo* processo, std::set<Processo*,ProcessoComparator>& processosAtuais) {
     int processoId = processo->getId();
     int tamanhoBloco = processo->getRam();
     int paginasLiberadas = tamanhoBloco / tamPaginas;
@@ -55,7 +56,17 @@ void GerenciadorMemoria::liberaMemoria(Processo* processo) {
         }
     }
     tamanhoLivre += tamanhoBloco;
-    if(processo->getEstadoString() == "TERMINADO") delete(processo);
+
+    //Se processo terminou, precisa limpar do vetor de processosAtuais 
+    if (processo->getEstadoString() == "TERMINADO") {
+        
+        //Encontrar o processo no vetor
+        auto it = std::find(processosAtuais.begin(), processosAtuais.end(), processo);
+        if (it != processosAtuais.end()) {
+            processosAtuais.erase(it);
+        }
+        delete processo;
+    }
 }
 
 //Filtro para colorir MP (Cinza p/ memória livre)

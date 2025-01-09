@@ -2,11 +2,10 @@
 #define GERENCIADOR_MEMORIA_H
 #include <vector>
 #include <utility>
+#include "../include/Despachante.h"
 class Despachante;
 #include "../include/Processo.h"
-#include "../include/Despachante.h"
 #include "../include/globals.h"
-
 
 
 class GerenciadorMemoria{
@@ -26,7 +25,8 @@ class GerenciadorMemoria{
         std::string getCor(int idProcesso);
         void visualizarMemoria();
         bool alocarMemoria(int processoId, int tamanho);
-        void liberaMemoria(Processo* processo);
+        void liberaMemoria(Processo* processo,std::set<Processo*,ProcessoComparator>& processosAtuais);
+        Despachante* getDespachante() {return despachante;};
 
 };
 #endif

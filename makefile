@@ -1,6 +1,4 @@
-#CXX = /opt/homebrew/bin/g++-14
-
-#Usar compilador correto
+# Defina o compilador  /opt/homebrew/bin/g++-14
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
     CXX = clang++
@@ -8,20 +6,27 @@ else
     CXX = g++
 endif
 
-CXXFLAGS = -std=c++11 -I./include
+# Flags de compilação e linkagem
+CXXFLAGS = -std=c++11 -stdlib=libc++ `wx-config --cxxflags` -I./include
+LDFLAGS = -stdlib=libc++ `wx-config --libs`
 SRC = $(wildcard src/*.cpp)
 OBJDIR = obj
 BINDIR = bin
 TARGET = $(BINDIR)/simulador
 OBJ = $(patsubst %.cpp, $(OBJDIR)/%.o, $(notdir $(SRC)))
+DEP = $(OBJ:.o=.d)
 
+$(OBJDIR)/%.o: src/%.cpp
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -MMD -MF $(OBJDIR)/$*.d -c $< -o $@
+
+-include $(DEP)
 
 all: $(TARGET)
 
-
 $(TARGET): $(OBJ)
 	mkdir -p $(BINDIR)
-	$(CXX) $(CXXFLAGS) $^ -o $@
+	$(CXX) $(OBJ) $(LDFLAGS) -o $@
 
 $(OBJDIR)/%.o: src/%.cpp
 	mkdir -p $(OBJDIR)
