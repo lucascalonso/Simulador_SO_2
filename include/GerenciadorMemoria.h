@@ -2,7 +2,10 @@
 #define GERENCIADOR_MEMORIA_H
 #include <vector>
 #include <utility>
+#include <sstream>
 #include "../include/Despachante.h"
+#include <wx/wx.h>
+#include <map>
 class Despachante;
 #include "../include/Processo.h"
 #include "../include/globals.h"
@@ -22,8 +25,10 @@ class GerenciadorMemoria{
         int getNumPaginas() const;
         int getMemoriaTotal() const;
         int getMemoriaDisponivel();
+        int* getMemoria();
         std::string getCor(int idProcesso);
-        void visualizarMemoria();
+        std::string visualizarMemoria();
+        std::vector<std::pair<int, wxColour>> visualizarMemoriaComCores();
         bool alocarMemoria(int processoId, int tamanho);
         void liberaMemoria(Processo* processo,std::set<Processo*,ProcessoComparator>& processosAtuais);
         Despachante* getDespachante() {return despachante;};

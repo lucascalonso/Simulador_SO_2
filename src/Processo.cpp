@@ -49,7 +49,7 @@ void Processo::executarCpu() {
         else{
             alterarEstado(Estado::BLOQUEADO);
         }
-    } else if (estado == Estado::PRONTO) alterarEstado(Estado::EXECUTANDO);
+    } else if (estado == Estado::PRONTO || estado == Estado::PRONTO_SUSPENSO) alterarEstado(Estado::EXECUTANDO);
 }
 
 void Processo::setTempoChegada(int tempo){

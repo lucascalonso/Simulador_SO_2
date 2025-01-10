@@ -77,21 +77,46 @@ std::string GerenciadorMemoria::getCor(int idProcesso) {
     return "\033[" + std::to_string(cor) + "m";
 }
 
-void GerenciadorMemoria::visualizarMemoria() {
-    std::cout << std::endl;
-    
-    //Número de páginas por linha
-    const int paginasPorLinha = 128;  
-    
-    for (int i = 0; i < numPaginas; i++) {
+std::string GerenciadorMemoria::visualizarMemoria() {
+    std::stringstream ss;
 
-        //Printa Id do processo com a cor correspondente
-        std::cout << getCor(memoria[i]) << (memoria[i] == 0 ? "0" : std::to_string(memoria[i])) << "\033[0m";
-        
-        // Adicionar quebra de linha a cada paginasPorLinha páginas
+    const int paginasPorLinha = 128;
+    for (int i = 0; i < numPaginas; i++) {
+        // Apenas adiciona o ID sem sequência de cores
+        ss << (memoria[i] == 0 ? "0" : std::to_string(memoria[i]));
+
         if ((i + 1) % paginasPorLinha == 0) {
-            std::cout << std::endl;
+            ss << '\n';
         }
     }
-    std::cout << std::endl;
+
+    ss << '\n';
+    return ss.str();
 }
+
+// Retorna um vetor de pares (ID, cor)
+std::vector<std::pair<int, wxColour>> GerenciadorMemoria::visualizarMemoriaComCores() {
+    std::vector<std::pair<int, wxColour>> memoriaColorida;
+
+    // Mapeia cada ID de processo para uma cor fixa
+    std::map<int, wxColour> mapaDeCores;
+    mapaDeCores[0] = wxColour(128, 128, 128); // Cinza para memória livre
+
+    for (int i = 0; i < numPaginas; i++) {
+        int idProcesso = memoria[i];
+
+        // Se o ID ainda não tiver uma cor atribuída, gere uma nova cor
+        if (mapaDeCores.find(idProcesso) == mapaDeCores.end()) {
+            wxColour novaCor(rand() % 256, rand() % 256, rand() % 256); // Cor aleatória
+            mapaDeCores[idProcesso] = novaCor;
+        }
+
+        // Adiciona o ID e sua cor ao vetor
+        memoriaColorida.emplace_back(idProcesso, mapaDeCores[idProcesso]);
+    }
+
+    return memoriaColorida;
+}
+
+int GerenciadorMemoria::getNumPaginas() const {return numPaginas;}
+int* GerenciadorMemoria::getMemoria() {return memoria;}
