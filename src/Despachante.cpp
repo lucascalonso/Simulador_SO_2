@@ -5,9 +5,6 @@
 #include "../include/globals.h"
 #include <iostream>
 
-
-
-
 Despachante::Despachante(int quantum,int numCpus) : quantum(quantum), numCpus(numCpus){}
 
 //Chamado na chegada de um processo e ao tentar alocar processos suspensos
@@ -89,7 +86,9 @@ void Despachante::escalonar(){
     //Evita que o mesmo Processo seja executado em CPUs diferentes durante u.t
     //Também controla quais processos terão seu tempo de I/O decrementado
     //Se um processo executou em uma u.t e foi bloqueado, não pode ter seu duracaoIo decrementado nesse ciclo
-    std::unordered_set<Processo*> processosAlocadosNoQuantum;
+    processosAlocadosNoQuantum.clear();
+
+    gerenciadorMemoria->deletarProcessos();
 
     std::cout << "---------------------------------------------" << tempoAtual << " u.t decorridos------------------------------------------------------------\n\n";
     
@@ -97,6 +96,8 @@ void Despachante::escalonar(){
 
     //Para cada CPU, executa processo nele ou busca nas filas caso !processoAtual
     for (int i = 0; i < numCpus ; i++) {
+        
+        
         
         processoAtual = cpusDisponiveis[i].P;
         
@@ -110,6 +111,7 @@ void Despachante::escalonar(){
             //Checa se o processo já executou por 1 quantum e não terminou
             if(cpusDisponiveis[i].tempo_executando_processo == quantum  && !processoAtual->checarTerminoDaFase()){
                 filaProntos.push(processoAtual);
+                processoAtual->alterarEstado(Estado::PRONTO_FIM_QUANTUM);
                 cpusDisponiveis[i].P = nullptr;
                 cpusDisponiveis[i].tempo_executando_processo = 0;
             }
@@ -225,7 +227,6 @@ void Despachante::escalonar(){
                 // Caso consiga desalocar, realoca o processo de prontos suspensos para prontos
                 if (contaFila < countProntosSuspensos) {
                     realocarProntosSuspensos();
-                    processosAlocadosNoQuantum.insert(processoProntoSuspenso); // Marca como processado no quantum atual
                     std::cout << "Processo #" << processoProntoSuspenso->getId() 
                             << " movido de prontos suspensos para prontos.\n";
 
@@ -268,6 +269,7 @@ void Despachante::escalonar(){
                           << "\n";
                 
                 //Como Estado do Processo é TERMINADO, será deletado no método abaixo
+                
                 gerenciadorMemoria->liberaMemoria(processoAtual,processosAtuais);
             
             //Caso não tenha feito I/O, tempoRestanteCpu = duracaoCpu2 e adiciona na fila de bloqueados                   
@@ -425,7 +427,7 @@ void Despachante::realocarProntosSuspensos() {
             filaProntos.push(processo);
 
             std::cout << "Processo #" << processo->getId()
-                    << " movidodo para fila de prontos. "
+                    << " movido para fila de prontos. "
                     << "Memória utilizada: " << processo->getRam() << " MB.\n";
         } else break;
     }
@@ -473,3 +475,5 @@ void Despachante::adicionarProcessoNaFilaProntosSuspensos(Processo* processo) {
     }
 
 std::set<Processo*,ProcessoComparator> Despachante::getProcessosAtuais(){return processosAtuais;};
+
+std::unordered_set<Processo*> Despachante::getProcessosAlocadosNoQuantum() {return processosAlocadosNoQuantum;};

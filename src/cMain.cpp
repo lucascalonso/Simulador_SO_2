@@ -7,19 +7,18 @@
 #include <thread>
 #include <chrono>
 
-
 class MyFrame : public wxFrame {
 public:
     MyFrame(GerenciadorMemoria* gm, GeradorDeProcessos* gp, Despachante* dp)
-        : wxFrame(nullptr, wxID_ANY, "Simulador Round-robin", wxDefaultPosition, wxSize(1555, 600)),
-          gerenciadorInstance(gm), geradorInstance(gp), despachanteInstance(dp) {
+        : wxFrame(nullptr, wxID_ANY, "Simulador Round-robin", wxDefaultPosition, wxSize(1680, 900)),
+          gerenciadorInstance(gm), geradorInstance(gp), despachanteInstance(dp), simuladorAtivo(false) {
         
         wxButton* buttonEscalonar = new wxButton(this, wxID_ANY, "Escalonar", wxPoint(10, 500), wxSize(150, 40));
         wxButton* buttonGerarProcesso = new wxButton(this, wxID_ANY, "Gerar Processo", wxPoint(210, 500), wxSize(150, 40));
         wxButton* buttonLigarSimulador = new wxButton(this, wxID_ANY, "Toggle Simulador", wxPoint(410, 500), wxSize(150, 40));
         wxButton* buttonImprimirMemoria = new wxButton(this, wxID_ANY, "Imprimir Memória", wxPoint(610, 500), wxSize(150, 40));
         
-        wxFont font(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Helvetica");
+        wxFont font(10, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Helvetica");
         buttonEscalonar->SetFont(font);
         buttonGerarProcesso->SetFont(font);
         buttonLigarSimulador->SetFont(font);
@@ -30,9 +29,9 @@ public:
         buttonLigarSimulador->Bind(wxEVT_BUTTON, &MyFrame::OnButtonLigarSimuladorClick, this);
         buttonImprimirMemoria->Bind(wxEVT_BUTTON, &MyFrame::OnButtonImprimirMemoriaClick, this);
         
-        infoPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(900, 500));
+        infoPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 500));
 
-        memoriaPanel = new wxPanel(this, wxID_ANY, wxPoint(910, 10), wxSize(880, 470));
+        memoriaPanel = new wxPanel(this, wxID_ANY, wxPoint(780, 10), wxSize(895, 448));  //wxSize(800,383)
         memoriaPanel->SetBackgroundColour(*wxWHITE);
         memoriaPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintMemoria, this);
 
@@ -61,15 +60,13 @@ private:
 
     void OnButtonLigarSimuladorClick(wxCommandEvent& event) {
         if (!simuladorAtivo) {
-            // Ligar o simulador
             simuladorAtivo = true;
             simuladorThread = std::thread(&MyFrame::rodarSimulador, this);
             wxMessageBox("Simulador ligado!", "Simulador ligado!", wxOK | wxICON_INFORMATION);
         } else {
-            // Desligar o simulador
             simuladorAtivo = false;
             if (simuladorThread.joinable()) {
-                simuladorThread.join(); // Aguarda a thread terminar
+                simuladorThread.join();
             }
             wxMessageBox("Simulador desligado!", "Simulador desligado!", wxOK | wxICON_INFORMATION);
         }
@@ -88,7 +85,7 @@ private:
             gerenciadorInstance->getDespachante()->escalonar();
 
             //Atualiza a exibição dos processos (thread-safe chamada para a UI)
-            CallAfter([this]() { exibirTodosOsProcessos(); });
+            CallAfter([this]() { exibirProcessosNasCpus(); });
 
             // Atualiza a memória (desenha o painel de memória)
             CallAfter([this]() { memoriaPanel->Refresh(); });
@@ -102,24 +99,26 @@ private:
     void OnButtonEscalonarClick(wxCommandEvent& event) {
         tempoAtual++;
         gerenciadorInstance->getDespachante()->escalonar();
-        exibirTodosOsProcessos();
+        exibirProcessosNasCpus();
+        memoriaPanel->Refresh();
     }
     
 
     void OnButtonImprimirMemoriaClick(wxCommandEvent& event) {
-        memoriaPanel->Refresh(); // Solicita o redesenho do painel
-        memoriaPanel->Update();  // Garante que o desenho ocorra imediatamente
+        memoriaPanel->Refresh();
+        memoriaPanel->Update();
     }
     
     void OnButtonGerarProcessoClick(wxCommandEvent& event) {
         Processo* novoProcesso = geradorInstance->gerarProcesso();
         despachanteInstance->tentaAlocarProcesso(novoProcesso);
         
-        exibirTodosOsProcessos();
+        exibirProcessosNasCpus();
+        memoriaPanel->Refresh();
     }
 
     void exibirTodosOsProcessos() {
-        wxString infoTodosProcessos;
+        infoTextCtrl->Clear(); // Limpa o texto existente antes de adicionar novos dados.
 
         // Iterando sobre o set de processos ordenados por ID
         for (auto& processo : despachanteInstance->getProcessosAtuais()) {
@@ -129,13 +128,13 @@ private:
             int r = (processoId * 50) % 256;  // R (vermelho) baseado no ID
             int g = (processoId * 75) % 256;  // G (verde) baseado no ID
             int b = (processoId * 100) % 256; // B (azul) baseado no ID
-            
             wxColour cor(r, g, b);
 
-            // Aplicar a cor do texto para o processo
-            wxTextAttr textoCor(cor);  // Cria um estilo com a cor definida
-            infoTextCtrl->SetStyle(infoTextCtrl->GetLastPosition(), infoTextCtrl->GetLastPosition(), textoCor);
-            
+            // Criar um estilo com a cor e fonte personalizada
+            wxTextAttr textoCor(cor);
+            wxFont fonte(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, "Helvetica");
+            textoCor.SetFont(fonte);
+
             // Gerar o texto do processo
             wxString msg;
             msg.Printf(
@@ -148,13 +147,64 @@ private:
                 processo->getEstadoString()
             );
 
-            // Adiciona a mensagem com o estilo de cor
-            infoTodosProcessos += msg;
+            // Determina o intervalo antes e depois de adicionar o texto
+            long inicio = infoTextCtrl->GetLastPosition();
+            infoTextCtrl->AppendText(msg);
+            long fim = infoTextCtrl->GetLastPosition();
+
+            // Aplica o estilo ao intervalo recém-adicionado
+            infoTextCtrl->SetStyle(inicio, fim, textoCor);
         }
 
-        // Atualiza o InfoText com as informações coloridas
-        updateInfoText(infoTodosProcessos);
+        // Garante que o controle seja redesenhado
+        infoTextCtrl->Refresh();
+        infoTextCtrl->Update();
     }
+
+    void exibirProcessosNasCpus() {
+        infoTextCtrl->Clear(); // Limpa o texto existente antes de adicionar novos dados.
+
+        // Iterando sobre o set de processos ordenados por ID
+        for (auto& processo : despachanteInstance->getProcessosAlocadosNoQuantum()) {    
+                
+            int processoId = processo->getId();
+                
+            // Gerar a cor para o processo baseado no ID
+            int r = (processoId * 50) % 256;  // R (vermelho) baseado no ID
+            int g = (processoId * 75) % 256;  // G (verde) baseado no ID
+            int b = (processoId * 100) % 256; // B (azul) baseado no ID
+            wxColour cor(r, g, b);
+
+             // Criar um estilo com a cor e fonte personalizada
+            wxTextAttr textoCor(cor);
+            wxFont fonte(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, "Helvetica");
+            textoCor.SetFont(fonte);
+
+            // Gerar o texto do processo
+            wxString msg;
+            msg.Printf(
+                 "ID: %d\nDuracao Restante CPU: %d\nDuracao IO: %d\nEstado após executar: %s\n\n", 
+                processo->getId(), 
+                  processo->getTempoRestanteCpu(),
+                  processo->getDuracaoIo(),
+                 processo->getEstadoString()
+            );
+
+             // Determina o intervalo antes e depois de adicionar o texto
+            long inicio = infoTextCtrl->GetLastPosition();
+            infoTextCtrl->AppendText(msg);
+            long fim = infoTextCtrl->GetLastPosition();
+
+            // Aplica o estilo ao intervalo recém-adicionado
+            infoTextCtrl->SetStyle(inicio, fim, textoCor);
+        }
+
+        // Garante que o controle seja redesenhado
+        infoTextCtrl->Refresh();
+        infoTextCtrl->Update();
+    }
+    
+
 
     void updateInfoText(const wxString& info) {
         //Atualiza o controle de texto com as informações passadas
@@ -170,8 +220,8 @@ private:
         dc.SetBackground(*wxWHITE); // Definindo o fundo como branco
         dc.Clear(); // Limpando o painel antes de desenhar
 
-        const int blockSize = 5;  // Tamanho de cada bloco (ajustado para ser um pouco maior)
-        const int padding = 0;     // Espaço entre os blocos
+        const int blockSize = 6;  // Tamanho de cada bloco (ajustado para ser um pouco maior)
+        const int padding = 1;     // Espaço entre os blocos
         const int paginasPorLinha = 128; // Número de páginas por linha
 
         int x = 0, y = 0;
@@ -214,7 +264,6 @@ private:
         }
     }
 
-    
 };
 
 class MyApp : public wxApp {
@@ -224,7 +273,7 @@ public:
         Despachante* despachante = new Despachante(4,4);
         GerenciadorMemoria* gerenciador = new GerenciadorMemoria(32 * 1024, despachante, 4);
         despachante->setGerenciadorMemoria(gerenciador);
-        GeradorDeProcessos* gerador = new GeradorDeProcessos(0.5);
+        GeradorDeProcessos* gerador = new GeradorDeProcessos(1);
         tempoAtual = 0;
 
         MyFrame* frame = new MyFrame(gerenciador,gerador,despachante);

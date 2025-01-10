@@ -19,6 +19,7 @@ class GerenciadorMemoria{
         int tamPaginas;
         int numPaginas;                     
         Despachante *despachante;
+        std::set<Processo*> processosADeletar;
 
     public:
         GerenciadorMemoria(int tamanhoTotal, Despachante* despachantePtr,int tamPaginas);
@@ -32,6 +33,7 @@ class GerenciadorMemoria{
         bool alocarMemoria(int processoId, int tamanho);
         void liberaMemoria(Processo* processo,std::set<Processo*,ProcessoComparator>& processosAtuais);
         Despachante* getDespachante() {return despachante;};
+        void deletarProcessos();
 
 };
 #endif

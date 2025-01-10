@@ -10,7 +10,8 @@ enum Estado{
     BLOQUEADO,
     PRONTO_SUSPENSO,
     BLOQUEADO_SUSPENSO,
-    TERMINADO
+    TERMINADO,
+    PRONTO_FIM_QUANTUM
 };
 
 class Processo {
@@ -20,6 +21,7 @@ private:
     int duracaoCpu1;
     int duracaoCpu2;
     int duracaoIo;
+    int duracaoIoTotal;
     int tempoRestanteCpu;
     bool fezIo;
     Estado estado;
@@ -36,6 +38,7 @@ public:
     int getDuracaoCpu1() const;
     int getDuracaoCpu2() const;
     int getDuracaoIo();
+    int getDuracaoIoTotal();
     int getTempoRestanteCpu();
     void alterarEstado(Estado novoEstado);
     void atualizarTempoCpu1(int tempo);

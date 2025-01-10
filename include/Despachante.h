@@ -32,6 +32,7 @@ private:
     std::queue<Processo*> filaAuxiliar;
     GerenciadorMemoria* gerenciadorMemoria;
     std::set<Processo*,ProcessoComparator> processosAtuais;
+    std::unordered_set<Processo*> processosAlocadosNoQuantum;
     int quantum;
     int numCpus;
 
@@ -55,6 +56,9 @@ public:
     int desalocarAteNecessario(int memoriaNecessaria, std::vector<Processo*>& processosParaDesalocar);
     void realocarProntosSuspensos();
     std::set<Processo*,ProcessoComparator> getProcessosAtuais();
+    int getNumCpus(){return numCpus;};
+    CPU* getCpusDisponiveis(){return cpusDisponiveis;};
+    std::unordered_set<Processo*> getProcessosAlocadosNoQuantum();
 
 };
 #endif

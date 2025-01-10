@@ -5,7 +5,7 @@
 #include <thread>
 
 Processo::Processo(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram)
-    : id(id), duracaoCpu1(duracaoCpu1), duracaoIo(duracaoIo), duracaoCpu2(duracaoCpu2), ram(ram), estado(Estado::PRONTO), fezIo(false)
+    : id(id), duracaoCpu1(duracaoCpu1), duracaoIo(duracaoIo), duracaoCpu2(duracaoCpu2), ram(ram), estado(Estado::PRONTO), fezIo(false),duracaoIoTotal(duracaoIo)
 {   
     tempoChegada = tempoAtual;
 
@@ -26,6 +26,7 @@ std::string Processo::getEstadoString() const{
         case TERMINADO: return "TERMINADO";
         case PRONTO_SUSPENSO: return "PRONTO_SUSPENSO";
         case BLOQUEADO_SUSPENSO: return "BLOQUEADO_SUSPENSO";
+        case PRONTO_FIM_QUANTUM: return "PRONTO_FIM_QUANTUM";
         default: return "DESCONHECIDO";
     }
 }
@@ -49,7 +50,7 @@ void Processo::executarCpu() {
         else{
             alterarEstado(Estado::BLOQUEADO);
         }
-    } else if (estado == Estado::PRONTO || estado == Estado::PRONTO_SUSPENSO) alterarEstado(Estado::EXECUTANDO);
+    } else if (estado == Estado::PRONTO || estado == Estado::PRONTO_SUSPENSO || estado == Estado::PRONTO_FIM_QUANTUM) alterarEstado(Estado::EXECUTANDO);
 }
 
 void Processo::setTempoChegada(int tempo){
@@ -63,6 +64,7 @@ int Processo::getId() const { return id; }
 int Processo::getDuracaoCpu1() const { return duracaoCpu1; }
 int Processo::getDuracaoCpu2() const { return duracaoCpu2; }
 int Processo::getDuracaoIo()  { return duracaoIo; }
+int Processo::getDuracaoIoTotal()  { return duracaoIoTotal; }
 
 void Processo::alterarEstado(Estado novoEstado) {
     estado = novoEstado;

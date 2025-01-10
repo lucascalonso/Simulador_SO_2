@@ -65,7 +65,15 @@ void GerenciadorMemoria::liberaMemoria(Processo* processo, std::set<Processo*,Pr
         if (it != processosAtuais.end()) {
             processosAtuais.erase(it);
         }
-        delete processo;
+        processosADeletar.insert(processo);
+        //delete processo;
+    }
+}
+
+void GerenciadorMemoria::deletarProcessos() {
+    for (auto it = processosADeletar.begin(); it != processosADeletar.end(); ) {
+        delete *it;
+        it = processosADeletar.erase(it);
     }
 }
 
