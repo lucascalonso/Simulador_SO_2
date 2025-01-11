@@ -111,3 +111,4 @@ std::vector<std::pair<int, wxColour>> GerenciadorMemoria::visualizarMemoriaComCo
 
 int GerenciadorMemoria::getNumPaginas() const {return numPaginas;}
 int* GerenciadorMemoria::getMemoria() {return memoria;}
+std::set<Processo*> GerenciadorMemoria::getProcessosADeletar() {return processosADeletar;}

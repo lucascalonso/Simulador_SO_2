@@ -173,50 +173,71 @@ private:
     }
 
     void exibirProcessosNasCpus() {
-        cpuTextCtrl->Clear(); // Limpa o texto existente antes de adicionar novos dados.
+        //Limpa o texto existente
+        cpuTextCtrl->Clear(); 
+        
+        //Para cada um das CPUs
+        for (int i = 0; i < despachanteInstance->getNumCpus(); ++i) {
+            
+            auto& cpu = despachanteInstance->getCpusDisponiveis()[i];
+            
+            //Se o processo existe dentro da CPU, seleciona ele. Caso não exista, é porque terminou fase de I/O, e será igual a ultimoProcesso
+            //Dessa forma, mesmo se P selecionado para ser liberado, ainda teremos sua referência em ultimoProcesso até a próxima chamada de escalonar
+            Processo* processo = cpu.P ? cpu.P : cpu.ultimoProcesso;
 
-        // Iterando sobre o set de processos ordenados pelo Id
-        for (auto& processo : despachanteInstance->getProcessosAlocadosNoQuantum()) {    
-                
-            int processoId = processo->getId();
-                
-            // Gerar a cor para o processo baseado no ID
-            int r = (processoId * 50) % 256;  // R (vermelho) baseado no ID
-            int g = (processoId * 75) % 256;  // G (verde) baseado no ID
-            int b = (processoId * 100) % 256; // B (azul) baseado no ID
-            wxColour cor(r, g, b);
-
-             // Criar um estilo com a cor e fonte personalizada
-            wxTextAttr textoCor(cor);
-            wxFont fonte(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, "Helvetica");
-            textoCor.SetFont(fonte);
-
-            // Gerar o texto do processo
             wxString msg;
-            msg.Printf(
-                 "ID: %d\nDuracao Restante CPU: %d\nDuracao IO: %d\nEstado após executar: %s\n\n", 
-                processo->getId(), 
-                  processo->getTempoRestanteCpu(),
-                  processo->getDuracaoIo(),
-                 processo->getEstadoString()
-            );
+            
+            //Evitamos que o mesmo processo seja impresso associado a CPUs diferentes (mais fácil do que usar o set processosAlocadosNoQuantum)
+            if (processo && (processo->getFezIo() || processo->getDuracaoIo() == processo->getDuracaoIoTotal())) {
+                
+                //Gera cor para o processo baseado no ID
+                int processoId = processo->getId();
+                int r = (processoId * 50) % 256;
+                int g = (processoId * 75) % 256;
+                int b = (processoId * 100) % 256;
+                wxColour cor(r, g, b);
 
-             // Determina o intervalo antes e depois de adicionar o texto
-            long inicio = cpuTextCtrl->GetLastPosition();
-            cpuTextCtrl->AppendText(msg);
-            long fim = cpuTextCtrl->GetLastPosition();
+                //Cria estilo com a cor e fonte personalizada
+                wxTextAttr textoCor(cor);
+                wxFont fonte(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, "Helvetica");
+                textoCor.SetFont(fonte);
 
-            // Aplica o estilo ao intervalo recém-adicionado
-            cpuTextCtrl->SetStyle(inicio, fim, textoCor);
+                //Gera o texto p/ o frame
+                msg.Printf(
+                    "CPU #%d:\n"
+                    "ID: %d\n"
+                    "Count: %d\n"
+                    "Duração Restante CPU: %d\n"
+                    "Duração IO: %d\n"
+                    "Estado: %s\n\n",
+                    i + 1,
+                    processo->getId(),
+                    cpu.tempo_executando_processo,
+                    processo->getTempoRestanteCpu(),
+                    processo->getDuracaoIo(),
+                    processo->getEstadoString()
+                );
+
+                //Determina o intervalo antes e depois de adicionar o texto
+                long inicio = cpuTextCtrl->GetLastPosition();
+                cpuTextCtrl->AppendText(msg);
+                long fim = cpuTextCtrl->GetLastPosition();
+
+                //Aplica o estilo ao intervalo recém-adicionado
+                cpuTextCtrl->SetStyle(inicio, fim, textoCor);
+
+            } else {
+                //Nesse caso, a CPU está ociosa. Imprime assim como em imprimirFila()
+                msg.Printf("CPU #%d: CPU Ociosa. Aguardando...\n\n", i + 1);
+                cpuTextCtrl->AppendText(msg);
+            }
         }
-
-        // Garante que o controle seja redesenhado
+        
+        //Garante que o controle seja redesenhado
         cpuTextCtrl->Refresh();
         cpuTextCtrl->Update();
     }
     
-
-
     void updateInfoText(const wxString& info) {
         //Atualiza o controle de texto com as informações passadas
         cpuTextCtrl->SetValue(info); 

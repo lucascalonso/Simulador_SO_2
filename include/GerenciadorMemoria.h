@@ -33,6 +33,7 @@ class GerenciadorMemoria{
         void liberaMemoria(Processo* processo,std::set<Processo*,ProcessoComparator>& processosAtuais);
         Despachante* getDespachante() {return despachante;};
         void deletarProcessos();
+        std::set<Processo*> getProcessosADeletar();
 
 };
 #endif

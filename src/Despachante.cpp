@@ -97,8 +97,7 @@ void Despachante::escalonar(){
     //Para cada CPU, executa processo nele ou busca nas filas caso !processoAtual
     for (int i = 0; i < numCpus ; i++) {
         
-        
-        
+        cpusDisponiveis[i].ultimoProcesso = nullptr;
         processoAtual = cpusDisponiveis[i].P;
         
         //Se tem processo no CPU e não executou nessa u.t (pode ter sofrido timeout no CPU#1 e executar na CPU#2 caso não tenha o check do set)
@@ -112,6 +111,7 @@ void Despachante::escalonar(){
             if(cpusDisponiveis[i].tempo_executando_processo == quantum  && !processoAtual->checarTerminoDaFase()){
                 filaProntos.push(processoAtual);
                 processoAtual->alterarEstado(Estado::PRONTO_FIM_QUANTUM);
+                cpusDisponiveis[i].ultimoProcesso = cpusDisponiveis[i].P;
                 cpusDisponiveis[i].P = nullptr;
                 cpusDisponiveis[i].tempo_executando_processo = 0;
             }
@@ -253,6 +253,7 @@ void Despachante::escalonar(){
         if (processoAtual->checarTerminoDaFase()) {
             
             //Reseta informações no CPU
+            cpusDisponiveis[i].ultimoProcesso = cpusDisponiveis[i].P;
             cpusDisponiveis[i].P = nullptr;
             cpusDisponiveis[i].tempo_executando_processo = 0;
             
@@ -269,7 +270,6 @@ void Despachante::escalonar(){
                           << "\n";
                 
                 //Como Estado do Processo é TERMINADO, será deletado no método abaixo
-                
                 gerenciadorMemoria->liberaMemoria(processoAtual,processosAtuais);
             
             //Caso não tenha feito I/O, tempoRestanteCpu = duracaoCpu2 e adiciona na fila de bloqueados                   

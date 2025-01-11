@@ -9,6 +9,7 @@
 
 typedef struct CPU{
     Processo *P = nullptr;
+    Processo* ultimoProcesso = nullptr;
     int tempo_executando_processo = 0;
 }CPU;
 
