@@ -296,7 +296,6 @@ void Despachante::escalonar(){
     imprimirFila(filaProntosSuspensos, "Fila de Prontos Suspensos");
     imprimirFila(filaBloqueadosSuspensos, "Fila de Bloqueados Suspensos");
     imprimirFila(filaAuxiliar, "Fila de Prontos Auxiliar");
-    //gerenciadorMemoria->visualizarMemoria();
 }
 
 void Despachante::setGerenciadorMemoria(GerenciadorMemoria* gm) {
@@ -433,7 +432,7 @@ void Despachante::realocarProntosSuspensos() {
     }
 }
 
-//Método calcula se 
+//Método verifica se é possível desalocar memoriaNecessaria dos processos bloqueados para alocar prontos suspensos
 bool Despachante::desalocarBloqueadosParaProntosSuspensos(int memoriaNecessaria) {
     int memoriaTotalDesalocavel = 0;
     std::vector<Processo*> processosParaDesalocar;

@@ -85,23 +85,6 @@ std::string GerenciadorMemoria::getCor(int idProcesso) {
     return "\033[" + std::to_string(cor) + "m";
 }
 
-std::string GerenciadorMemoria::visualizarMemoria() {
-    std::stringstream ss;
-
-    const int paginasPorLinha = 128;
-    for (int i = 0; i < numPaginas; i++) {
-        // Apenas adiciona o ID sem sequência de cores
-        ss << (memoria[i] == 0 ? "0" : std::to_string(memoria[i]));
-
-        if ((i + 1) % paginasPorLinha == 0) {
-            ss << '\n';
-        }
-    }
-
-    ss << '\n';
-    return ss.str();
-}
-
 // Retorna um vetor de pares (ID, cor)
 std::vector<std::pair<int, wxColour>> GerenciadorMemoria::visualizarMemoriaComCores() {
     std::vector<std::pair<int, wxColour>> memoriaColorida;

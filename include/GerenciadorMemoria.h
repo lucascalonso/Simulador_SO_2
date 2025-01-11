@@ -28,7 +28,6 @@ class GerenciadorMemoria{
         int getMemoriaDisponivel();
         int* getMemoria();
         std::string getCor(int idProcesso);
-        std::string visualizarMemoria();
         std::vector<std::pair<int, wxColour>> visualizarMemoriaComCores();
         bool alocarMemoria(int processoId, int tamanho);
         void liberaMemoria(Processo* processo,std::set<Processo*,ProcessoComparator>& processosAtuais);

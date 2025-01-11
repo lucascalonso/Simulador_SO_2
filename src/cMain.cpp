@@ -29,15 +29,19 @@ public:
         buttonLigarSimulador->Bind(wxEVT_BUTTON, &MyFrame::OnButtonLigarSimuladorClick, this);
         buttonImprimirMemoria->Bind(wxEVT_BUTTON, &MyFrame::OnButtonImprimirMemoriaClick, this);
         
-        infoPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 500));
+        cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 500));
+        processosPanel = new wxPanel(this, wxID_ANY, wxPoint(300, 0), wxSize(300, 500));
 
         memoriaPanel = new wxPanel(this, wxID_ANY, wxPoint(780, 10), wxSize(895, 448));  //wxSize(800,383)
         memoriaPanel->SetBackgroundColour(*wxWHITE);
         memoriaPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintMemoria, this);
 
         
-        infoTextCtrl = new wxTextCtrl(infoPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),
+        cpuTextCtrl = new wxTextCtrl(cpuPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),
                                       wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+
+        processosTextCtrl = new wxTextCtrl(processosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),
+                                      wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);                              
     }
 
     ~MyFrame(){
@@ -55,9 +59,12 @@ private:
     std::thread simuladorThread;
     
     wxPanel* memoriaPanel;
-    wxPanel* infoPanel;
-    wxTextCtrl* infoTextCtrl;
+    wxPanel* cpuPanel;
+    wxPanel* processosPanel;
+    wxTextCtrl* cpuTextCtrl;
+    wxTextCtrl* processosTextCtrl;
 
+    //
     void OnButtonLigarSimuladorClick(wxCommandEvent& event) {
         if (!simuladorAtivo) {
             simuladorAtivo = true;
@@ -72,9 +79,10 @@ private:
         }
     }
 
+    //Método que 
     void rodarSimulador() {
         while (simuladorAtivo) {
-            //Gera novos processos
+            //Gera novos processos e tenta aloca-los
             std::vector<Processo*> novosProcessos = geradorInstance->gerarProcessos();
             for (Processo* processo : novosProcessos) {
                 despachanteInstance->tentaAlocarProcesso(processo);
@@ -84,12 +92,12 @@ private:
             tempoAtual++;
             gerenciadorInstance->getDespachante()->escalonar();
 
-            //Atualiza a exibição dos processos (thread-safe chamada para a UI)
+            //Atualiza a exibição dos processos (thread-safe chamada p/ a UI)
             CallAfter([this]() { exibirProcessosNasCpus(); });
+            CallAfter([this]() { exibirTodosOsProcessos(); });
 
-            // Atualiza a memória (desenha o painel de memória)
+            //Desenha o painel de memória
             CallAfter([this]() { memoriaPanel->Refresh(); });
-
 
             //Pausa por 2 segundos
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -100,6 +108,7 @@ private:
         tempoAtual++;
         gerenciadorInstance->getDespachante()->escalonar();
         exibirProcessosNasCpus();
+        exibirTodosOsProcessos();
         memoriaPanel->Refresh();
     }
     
@@ -113,29 +122,31 @@ private:
         Processo* novoProcesso = geradorInstance->gerarProcesso();
         despachanteInstance->tentaAlocarProcesso(novoProcesso);
         
-        exibirProcessosNasCpus();
+        exibirTodosOsProcessos();
         memoriaPanel->Refresh();
     }
 
     void exibirTodosOsProcessos() {
-        infoTextCtrl->Clear(); // Limpa o texto existente antes de adicionar novos dados.
+        
+        //Limpa o texto existente antes de adicionar novos dados
+        processosTextCtrl->Clear(); 
 
-        // Iterando sobre o set de processos ordenados por ID
+        //Iterando sobre o set de todos os processos ordenados por ID
         for (auto& processo : despachanteInstance->getProcessosAtuais()) {
             int processoId = processo->getId();
             
-            // Gerar a cor para o processo baseado no ID
+            //Gera a cor p/ o processo baseado no ID
             int r = (processoId * 50) % 256;  // R (vermelho) baseado no ID
             int g = (processoId * 75) % 256;  // G (verde) baseado no ID
             int b = (processoId * 100) % 256; // B (azul) baseado no ID
             wxColour cor(r, g, b);
 
-            // Criar um estilo com a cor e fonte personalizada
+            //Estilo com a cor e fonte personalizada
             wxTextAttr textoCor(cor);
             wxFont fonte(12, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, "Helvetica");
             textoCor.SetFont(fonte);
 
-            // Gerar o texto do processo
+            //Gera o texto do processo
             wxString msg;
             msg.Printf(
                 "ID: %d\nDuracao Restante CPU: %d\nDuracao IO: %d\nRAM: %d MB\nTempo Chegada: %d\nEstado: %s\n\n", 
@@ -147,24 +158,24 @@ private:
                 processo->getEstadoString()
             );
 
-            // Determina o intervalo antes e depois de adicionar o texto
-            long inicio = infoTextCtrl->GetLastPosition();
-            infoTextCtrl->AppendText(msg);
-            long fim = infoTextCtrl->GetLastPosition();
+            //Determina o intervalo antes e depois de adicionar o texto
+            long inicio = processosTextCtrl->GetLastPosition();
+            processosTextCtrl->AppendText(msg);
+            long fim = processosTextCtrl->GetLastPosition();
 
-            // Aplica o estilo ao intervalo recém-adicionado
-            infoTextCtrl->SetStyle(inicio, fim, textoCor);
+            //Aplica o estilo ao intervalo
+            processosTextCtrl->SetStyle(inicio, fim, textoCor);
         }
 
         // Garante que o controle seja redesenhado
-        infoTextCtrl->Refresh();
-        infoTextCtrl->Update();
+        processosTextCtrl->Refresh();
+        processosTextCtrl->Update();
     }
 
     void exibirProcessosNasCpus() {
-        infoTextCtrl->Clear(); // Limpa o texto existente antes de adicionar novos dados.
+        cpuTextCtrl->Clear(); // Limpa o texto existente antes de adicionar novos dados.
 
-        // Iterando sobre o set de processos ordenados por ID
+        // Iterando sobre o set de processos ordenados pelo Id
         for (auto& processo : despachanteInstance->getProcessosAlocadosNoQuantum()) {    
                 
             int processoId = processo->getId();
@@ -191,28 +202,28 @@ private:
             );
 
              // Determina o intervalo antes e depois de adicionar o texto
-            long inicio = infoTextCtrl->GetLastPosition();
-            infoTextCtrl->AppendText(msg);
-            long fim = infoTextCtrl->GetLastPosition();
+            long inicio = cpuTextCtrl->GetLastPosition();
+            cpuTextCtrl->AppendText(msg);
+            long fim = cpuTextCtrl->GetLastPosition();
 
             // Aplica o estilo ao intervalo recém-adicionado
-            infoTextCtrl->SetStyle(inicio, fim, textoCor);
+            cpuTextCtrl->SetStyle(inicio, fim, textoCor);
         }
 
         // Garante que o controle seja redesenhado
-        infoTextCtrl->Refresh();
-        infoTextCtrl->Update();
+        cpuTextCtrl->Refresh();
+        cpuTextCtrl->Update();
     }
     
 
 
     void updateInfoText(const wxString& info) {
         //Atualiza o controle de texto com as informações passadas
-        infoTextCtrl->SetValue(info); 
+        cpuTextCtrl->SetValue(info); 
 
         //Garante que a área de texto seja redesenhada depois de atualizar
-        infoTextCtrl->Refresh();
-        infoTextCtrl->Update();
+        cpuTextCtrl->Refresh();
+        cpuTextCtrl->Update();
     }
 
     void OnPaintMemoria(wxPaintEvent& event) {
