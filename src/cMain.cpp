@@ -16,18 +16,15 @@ public:
         wxButton* buttonEscalonar = new wxButton(this, wxID_ANY, "Escalonar", wxPoint(10, 500), wxSize(150, 40));
         wxButton* buttonGerarProcesso = new wxButton(this, wxID_ANY, "Gerar Processo", wxPoint(210, 500), wxSize(150, 40));
         wxButton* buttonLigarSimulador = new wxButton(this, wxID_ANY, "Toggle Simulador", wxPoint(410, 500), wxSize(150, 40));
-        wxButton* buttonImprimirMemoria = new wxButton(this, wxID_ANY, "Imprimir Memória", wxPoint(610, 500), wxSize(150, 40));
         
         wxFont font(10, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Helvetica");
         buttonEscalonar->SetFont(font);
         buttonGerarProcesso->SetFont(font);
         buttonLigarSimulador->SetFont(font);
-        buttonImprimirMemoria->SetFont(font);
         
         buttonEscalonar->Bind(wxEVT_BUTTON, &MyFrame::OnButtonEscalonarClick, this);
         buttonGerarProcesso->Bind(wxEVT_BUTTON, &MyFrame::OnButtonGerarProcessoClick, this);
         buttonLigarSimulador->Bind(wxEVT_BUTTON, &MyFrame::OnButtonLigarSimuladorClick, this);
-        buttonImprimirMemoria->Bind(wxEVT_BUTTON, &MyFrame::OnButtonImprimirMemoriaClick, this);
         
         cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 500));
         processosPanel = new wxPanel(this, wxID_ANY, wxPoint(300, 0), wxSize(300, 500));
@@ -112,12 +109,6 @@ private:
         memoriaPanel->Refresh();
     }
     
-
-    void OnButtonImprimirMemoriaClick(wxCommandEvent& event) {
-        memoriaPanel->Refresh();
-        memoriaPanel->Update();
-    }
-    
     void OnButtonGerarProcessoClick(wxCommandEvent& event) {
         Processo* novoProcesso = geradorInstance->gerarProcesso();
         despachanteInstance->tentaAlocarProcesso(novoProcesso);
@@ -187,7 +178,7 @@ private:
 
             wxString msg;
             
-            //Evitamos que o mesmo processo seja impresso associado a CPUs diferentes (mais fácil do que usar o set processosAlocadosNoQuantum)
+            //Check para podermos imprimir os processos marcados como finalizados e bloqueados nesse intervalo de tempo
             if (processo && (processo->getFezIo() || processo->getDuracaoIo() == processo->getDuracaoIoTotal())) {
                 
                 //Gera cor para o processo baseado no ID
@@ -233,13 +224,13 @@ private:
             }
         }
         
-        //Garante que o controle seja redesenhado
+        //Refresh no frame
         cpuTextCtrl->Refresh();
         cpuTextCtrl->Update();
     }
     
     void updateInfoText(const wxString& info) {
-        //Atualiza o controle de texto com as informações passadas
+        //Atualiza o frame
         cpuTextCtrl->SetValue(info); 
 
         //Garante que a área de texto seja redesenhada depois de atualizar
