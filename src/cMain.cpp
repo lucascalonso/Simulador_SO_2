@@ -3,6 +3,7 @@
 #include "../include/GeradorDeProcessos.h"
 #include "../include/Despachante.h"
 #include "../include/GerenciadorMemoria.h"
+#include "../include/CriarProcessoDialog.h"
 #include "../include/globals.h"
 #include <thread>
 #include <chrono>
@@ -13,19 +14,28 @@ public:
         : wxFrame(nullptr, wxID_ANY, "Simulador Round-robin", wxDefaultPosition, wxSize(1680, 900)),
           gerenciadorInstance(gm), geradorInstance(gp), despachanteInstance(dp), simuladorAtivo(false) {
         
+        mainSizer = new wxBoxSizer(wxVERTICAL);
+        SetSizer(mainSizer);
+
         wxButton* buttonEscalonar = new wxButton(this, wxID_ANY, "Escalonar", wxPoint(10, 500), wxSize(150, 40));
         wxButton* buttonGerarProcesso = new wxButton(this, wxID_ANY, "Gerar Processo", wxPoint(210, 500), wxSize(150, 40));
         wxButton* buttonLigarSimulador = new wxButton(this, wxID_ANY, "Toggle Simulador", wxPoint(410, 500), wxSize(150, 40));
+        wxButton* criarProcessoButton = new wxButton(this, wxID_ANY, "Criar Processo", wxPoint(610, 500), wxSize(150, 40));
+
+
         
         wxFont font(10, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, "Helvetica");
         buttonEscalonar->SetFont(font);
         buttonGerarProcesso->SetFont(font);
         buttonLigarSimulador->SetFont(font);
+        criarProcessoButton->SetFont(font);
+        
         
         buttonEscalonar->Bind(wxEVT_BUTTON, &MyFrame::OnButtonEscalonarClick, this);
         buttonGerarProcesso->Bind(wxEVT_BUTTON, &MyFrame::OnButtonGerarProcessoClick, this);
         buttonLigarSimulador->Bind(wxEVT_BUTTON, &MyFrame::OnButtonLigarSimuladorClick, this);
-        
+        criarProcessoButton->Bind(wxEVT_BUTTON,&MyFrame::OnCriarProcesso, this, criarProcessoButton->GetId());
+
         cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 500));
         processosPanel = new wxPanel(this, wxID_ANY, wxPoint(300, 0), wxSize(300, 500));
 
@@ -38,7 +48,10 @@ public:
                                       wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
 
         processosTextCtrl = new wxTextCtrl(processosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),
-                                      wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);                              
+                                      wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP); 
+
+        SetSizer(mainSizer);
+        Layout();                           
     }
 
     ~MyFrame(){
@@ -55,11 +68,13 @@ private:
     std::atomic<bool> simuladorAtivo;
     std::thread simuladorThread;
     
+    
     wxPanel* memoriaPanel;
     wxPanel* cpuPanel;
     wxPanel* processosPanel;
     wxTextCtrl* cpuTextCtrl;
     wxTextCtrl* processosTextCtrl;
+    wxBoxSizer* mainSizer;
 
     //
     void OnButtonLigarSimuladorClick(wxCommandEvent& event) {
@@ -287,6 +302,18 @@ private:
         }
     }
 
+    void OnCriarProcesso(wxCommandEvent& event) {
+        CriarProcessoDialog dialog(this,despachanteInstance);  // Cria a instância do diálogo
+
+        // Chama o diálogo e espera que ele seja fechado
+        int resultado = dialog.ShowModal();
+
+        if (resultado == wxID_OK) {
+            // O processo foi criado, podemos fazer o que for necessário aqui, como adicionar o processo à lista ou iniciar a execução
+            memoriaPanel->Refresh();
+            exibirTodosOsProcessos();
+        }
+    };
 };
 
 class MyApp : public wxApp {
