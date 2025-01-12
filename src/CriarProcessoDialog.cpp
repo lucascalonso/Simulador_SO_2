@@ -43,7 +43,7 @@ void CriarProcessoDialog::OnCriar(wxCommandEvent& event) {
 
     // Verifique se os campos não estão vazios
     if (IdStr.IsEmpty() || duracaoCpu1Str.IsEmpty() || duracaoIoStr.IsEmpty() || duracaoCpu2Str.IsEmpty() || ramStr.IsEmpty()) {
-        wxMessageBox("Por favor, preencha todos os campos antes de criar o processo.", "Erro", wxOK | wxICON_ERROR);
+        wxMessageBox("Digite novamente.", "Por favor, preencha todos os campos antes de criar o processo.", wxOK | wxICON_ERROR);
         return;
     }
 
@@ -53,6 +53,20 @@ void CriarProcessoDialog::OnCriar(wxCommandEvent& event) {
     int duracaoIo = wxAtoi(duracaoIoStr);
     int duracaoCpu2 = wxAtoi(duracaoCpu2Str);
     int ram = wxAtoi(ramStr);
+
+    if(ram > 32 * 1024){
+        wxMessageBox("Digite novamente.", "O valor da memória solicitada é maior do que 32GB.", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    for (auto& processo : despachanteInstance->getProcessosAtuais()) {
+        if(id == processo->getId()){
+            wxMessageBox("Digite novamente.", "Processo com Id duplicado.", wxOK | wxICON_ERROR);
+        return;
+        }
+    }
+
+    
 
     // Criar o processo com os dados preenchidos
     Processo* novoProcesso = new Processo(id, duracaoCpu1, duracaoIo, duracaoCpu2, ram);

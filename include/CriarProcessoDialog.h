@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include "../include/Despachante.h"
+#include "../include/Processo.h"
 
 class CriarProcessoDialog : public wxDialog {
 public:

@@ -5,6 +5,7 @@
 #include "../include/GerenciadorMemoria.h"
 #include "../include/CriarProcessoDialog.h"
 #include "../include/globals.h"
+#include <random>
 #include <thread>
 #include <chrono>
 
@@ -34,9 +35,9 @@ public:
         buttonEscalonar->Bind(wxEVT_BUTTON, &MyFrame::OnButtonEscalonarClick, this);
         buttonGerarProcesso->Bind(wxEVT_BUTTON, &MyFrame::OnButtonGerarProcessoClick, this);
         buttonLigarSimulador->Bind(wxEVT_BUTTON, &MyFrame::OnButtonLigarSimuladorClick, this);
-        criarProcessoButton->Bind(wxEVT_BUTTON,&MyFrame::OnCriarProcesso, this, criarProcessoButton->GetId());
+        criarProcessoButton->Bind(wxEVT_BUTTON,&MyFrame::OnCriarProcesso, this);
 
-        cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 500));
+        cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 345));
         processosPanel = new wxPanel(this, wxID_ANY, wxPoint(300, 0), wxSize(300, 500));
 
         memoriaPanel = new wxPanel(this, wxID_ANY, wxPoint(780, 10), wxSize(895, 448));  //wxSize(800,383)
@@ -303,13 +304,10 @@ private:
     }
 
     void OnCriarProcesso(wxCommandEvent& event) {
-        CriarProcessoDialog dialog(this,despachanteInstance);  // Cria a instância do diálogo
-
-        // Chama o diálogo e espera que ele seja fechado
+        CriarProcessoDialog dialog(this,despachanteInstance);  
         int resultado = dialog.ShowModal();
 
         if (resultado == wxID_OK) {
-            // O processo foi criado, podemos fazer o que for necessário aqui, como adicionar o processo à lista ou iniciar a execução
             memoriaPanel->Refresh();
             exibirTodosOsProcessos();
         }
