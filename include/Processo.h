@@ -11,7 +11,6 @@ enum Estado{
     PRONTO_SUSPENSO,
     BLOQUEADO_SUSPENSO,
     TERMINADO,
-    PRONTO_FIM_QUANTUM
 };
 
 class Processo {

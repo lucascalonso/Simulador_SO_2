@@ -110,7 +110,7 @@ void Despachante::escalonar(){
             //Checa se o processo já executou por 1 quantum e não terminou
             if(cpusDisponiveis[i].tempo_executando_processo == quantum  && !processoAtual->checarTerminoDaFase()){
                 filaProntos.push(processoAtual);
-                processoAtual->alterarEstado(Estado::PRONTO_FIM_QUANTUM);
+                processoAtual->alterarEstado(Estado::PRONTO);
                 cpusDisponiveis[i].ultimoProcesso = cpusDisponiveis[i].P;
                 cpusDisponiveis[i].P = nullptr;
                 cpusDisponiveis[i].tempo_executando_processo = 0;

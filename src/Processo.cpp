@@ -26,7 +26,6 @@ std::string Processo::getEstadoString() const{
         case TERMINADO: return "TERMINADO";
         case PRONTO_SUSPENSO: return "PRONTO_SUSPENSO";
         case BLOQUEADO_SUSPENSO: return "BLOQUEADO_SUSPENSO";
-        case PRONTO_FIM_QUANTUM: return "PRONTO_FIM_QUANTUM";
         default: return "DESCONHECIDO";
     }
 }
@@ -50,7 +49,7 @@ void Processo::executarCpu() {
         else{
             alterarEstado(Estado::BLOQUEADO);
         }
-    } else if (estado == Estado::PRONTO || estado == Estado::PRONTO_SUSPENSO || estado == Estado::PRONTO_FIM_QUANTUM) alterarEstado(Estado::EXECUTANDO);
+    } else if (estado == Estado::PRONTO || estado == Estado::PRONTO_SUSPENSO) alterarEstado(Estado::EXECUTANDO);
 }
 
 void Processo::setTempoChegada(int tempo){
