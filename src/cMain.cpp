@@ -321,7 +321,7 @@ public:
         Despachante* despachante = new Despachante(4,4);
         GerenciadorMemoria* gerenciador = new GerenciadorMemoria(32 * 1024, despachante, 4);
         despachante->setGerenciadorMemoria(gerenciador);
-        GeradorDeProcessos* gerador = new GeradorDeProcessos(1);
+        GeradorDeProcessos* gerador = new GeradorDeProcessos(3);
         tempoAtual = 0;
 
         MyFrame* frame = new MyFrame(gerenciador,gerador,despachante);
