@@ -15,7 +15,6 @@ Processo::Processo(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int 
         fezIo = true;
 
     } else tempoRestanteCpu = duracaoCpu1;
-        
 }
 
 std::string Processo::getEstadoString() const{
@@ -94,3 +93,5 @@ bool Processo::getFezIo(){ return fezIo; }
 void Processo::setFezIo(){
     fezIo = true;
 }
+
+std::queue<Processo*> getFila(std::queue<Processo*> fila) {return fila;}

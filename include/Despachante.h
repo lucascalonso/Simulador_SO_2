@@ -60,6 +60,10 @@ public:
     int getNumCpus(){return numCpus;};
     CPU* getCpusDisponiveis(){return cpusDisponiveis;};
     std::unordered_set<Processo*> getProcessosAlocadosNoQuantum();
-
+    std::queue<Processo*> getFilaProntos();
+    std::queue<Processo*> getFilaProntosSuspensos();
+    std::queue<Processo*> getFilaBloqueados();
+    std::queue<Processo*> getFilaBloqueadosSuspensos();
+    std::queue<Processo*> getFilaAuxiliar();
 };
 #endif

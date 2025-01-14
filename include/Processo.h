@@ -2,6 +2,7 @@
 #define PROCESSO_H
 #include <string>
 #include "globals.h"
+#include "wx/wx.h"
 
 
 enum Estado{

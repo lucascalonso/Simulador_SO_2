@@ -473,6 +473,12 @@ void Despachante::adicionarProcessoNaFilaProntosSuspensos(Processo* processo) {
         filaProntosSuspensos.push(processo);
     }
 
-std::set<Processo*,ProcessoComparator> Despachante::getProcessosAtuais(){return processosAtuais;};
+std::set<Processo*,ProcessoComparator> Despachante::getProcessosAtuais(){return processosAtuais;}
 
-std::unordered_set<Processo*> Despachante::getProcessosAlocadosNoQuantum() {return processosAlocadosNoQuantum;};
+std::unordered_set<Processo*> Despachante::getProcessosAlocadosNoQuantum() {return processosAlocadosNoQuantum;}
+
+std::queue<Processo*> Despachante::getFilaProntos() { return filaProntos;}
+std::queue<Processo*> Despachante::getFilaProntosSuspensos() { return filaProntosSuspensos;}
+std::queue<Processo*> Despachante::getFilaBloqueados() {return filaBloqueados;}
+std::queue<Processo*> Despachante::getFilaBloqueadosSuspensos() { return filaBloqueadosSuspensos;}
+std::queue<Processo*> Despachante::getFilaAuxiliar() { return filaAuxiliar;}

@@ -12,7 +12,7 @@
 class MyFrame : public wxFrame {
 public:
     MyFrame(GerenciadorMemoria* gm, GeradorDeProcessos* gp, Despachante* dp)
-        : wxFrame(nullptr, wxID_ANY, "Simulador Round-robin", wxDefaultPosition, wxSize(1680, 900)),
+        : wxFrame(nullptr, wxID_ANY, "Simulador Round-robin", wxDefaultPosition, wxSize(1680, 990)),
           gerenciadorInstance(gm), geradorInstance(gp), despachanteInstance(dp), simuladorAtivo(false) {
         
         mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -39,17 +39,33 @@ public:
 
         cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0), wxSize(300, 345));
         processosPanel = new wxPanel(this, wxID_ANY, wxPoint(300, 0), wxSize(300, 500));
+        filaProntosPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 560), wxSize(600, 30));
+        filaAuxiliarPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 600), wxSize(600, 30));
+        filaBloqueadosPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 640), wxSize(600, 30));
+        filaProntosSuspensosPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 680), wxSize(600, 30));
+        filaBloqueadosSuspensosPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 720), wxSize(600, 30));
+        
 
         memoriaPanel = new wxPanel(this, wxID_ANY, wxPoint(780, 10), wxSize(895, 448));  //wxSize(800,383)
         memoriaPanel->SetBackgroundColour(*wxWHITE);
         memoriaPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintMemoria, this);
 
+        filaProntosTextCtrl = new wxTextCtrl(filaProntosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+                                 wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+        filaProntosSuspensosTextCtrl = new wxTextCtrl(filaProntosSuspensosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+                                 wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+        filaBloqueadosTextCtrl = new wxTextCtrl(filaBloqueadosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+                                 wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+        filaBloqueadosSuspensosTextCtrl = new wxTextCtrl(filaBloqueadosSuspensosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+                                 wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+        filaAuxiliarTextCtrl = new wxTextCtrl(filaAuxiliarPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+                                 wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
         
         cpuTextCtrl = new wxTextCtrl(cpuPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),
                                       wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
 
         processosTextCtrl = new wxTextCtrl(processosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),
-                                      wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP); 
+                                      wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);                 
 
         SetSizer(mainSizer);
         Layout();                           
@@ -72,9 +88,21 @@ private:
     
     wxPanel* memoriaPanel;
     wxPanel* cpuPanel;
+    wxPanel* filaProntosPanel;
+    wxPanel* filaProntosSuspensosPanel;
+    wxPanel* filaBloqueadosPanel;
+    wxPanel* filaBloqueadosSuspensosPanel;
+    wxPanel* filaAuxiliarPanel;
     wxPanel* processosPanel;
+
     wxTextCtrl* cpuTextCtrl;
     wxTextCtrl* processosTextCtrl;
+    wxTextCtrl* filaProntosTextCtrl;
+    wxTextCtrl* filaProntosSuspensosTextCtrl;
+    wxTextCtrl* filaBloqueadosTextCtrl;
+    wxTextCtrl* filaBloqueadosSuspensosTextCtrl;
+    wxTextCtrl* filaAuxiliarTextCtrl;
+
     wxBoxSizer* mainSizer;
 
     //
@@ -104,24 +132,28 @@ private:
             //Incrementa tempo e escalona processos
             tempoAtual++;
             gerenciadorInstance->getDespachante()->escalonar();
+            
+            
+            limparTodasAsFilas();
 
             //Atualiza a exibição dos processos (thread-safe chamada p/ a UI)
             CallAfter([this]() { exibirProcessosNasCpus(); });
             CallAfter([this]() { exibirTodosOsProcessos(); });
-
-            //Desenha o painel de memória
+            CallAfter([this]() { exibirTodasAsFilas(); });
             CallAfter([this]() { memoriaPanel->Refresh(); });
-
+        
             //Pausa por 2 segundos
             std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         }
     }
 
     void OnButtonEscalonarClick(wxCommandEvent& event) {
+        limparTodasAsFilas();
         tempoAtual++;
         gerenciadorInstance->getDespachante()->escalonar();
         exibirProcessosNasCpus();
         exibirTodosOsProcessos();
+        exibirTodasAsFilas();
         memoriaPanel->Refresh();
     }
     
@@ -133,10 +165,50 @@ private:
         memoriaPanel->Refresh();
     }
 
+    void exibirFila(const std::queue<Processo*>& fila,wxTextCtrl *textoCtrl){
+        
+        std::queue<Processo*> copiaFila = fila;
+        
+        while (!copiaFila.empty()) {
+            Processo *processoAtual = copiaFila.front();
+            copiaFila.pop();
+            
+            int processoId = processoAtual->getId();
+            
+
+            //Gera a cor p/ o processo baseado no ID
+            int r = (processoId * 50) % 256;  // R (vermelho) baseado no ID
+            int g = (processoId * 75) % 256;  // G (verde) baseado no ID
+            int b = (processoId * 100) % 256; // B (azul) baseado no ID
+            wxColour cor(r, g, b);
+        
+            wxTextAttr textoCor(cor);
+            wxFont fonte(14, wxFONTFAMILY_SWISS, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD, false, "Helvetica");
+            textoCor.SetFont(fonte);
+
+            //Gera o texto do processo
+            wxString msg;
+            msg.Printf(
+                "%d    ", 
+                processoId
+            );
+
+            //Determina o intervalo antes e depois de adicionar o texto
+            long inicio = textoCtrl->GetLastPosition();
+            textoCtrl->AppendText(msg);
+            long fim = textoCtrl->GetLastPosition();
+            textoCtrl->SetStyle(inicio, fim, textoCor);
+        }
+
+        textoCtrl->Refresh();
+        textoCtrl->Update();
+    }
+
     void exibirTodosOsProcessos() {
         
         //Limpa o texto existente antes de adicionar novos dados
-        processosTextCtrl->Clear(); 
+        processosTextCtrl->Clear();
+         
 
         //Iterando sobre o set de todos os processos ordenados por ID
         for (auto& processo : despachanteInstance->getProcessosAtuais()) {
@@ -177,6 +249,22 @@ private:
         // Garante que o controle seja redesenhado
         processosTextCtrl->Refresh();
         processosTextCtrl->Update();
+    }
+
+    void exibirTodasAsFilas(){
+        exibirFila(despachanteInstance->getFilaProntos(),filaProntosTextCtrl);
+        exibirFila(despachanteInstance->getFilaProntosSuspensos(),filaProntosSuspensosTextCtrl);
+        exibirFila(despachanteInstance->getFilaBloqueados(),filaBloqueadosTextCtrl);
+        exibirFila(despachanteInstance->getFilaBloqueadosSuspensos(),filaBloqueadosTextCtrl);
+        exibirFila(despachanteInstance->getFilaAuxiliar(),filaAuxiliarTextCtrl);
+    }
+
+    void limparTodasAsFilas(){
+        filaProntosTextCtrl->Clear();
+        filaProntosSuspensosTextCtrl->Clear();
+        filaBloqueadosSuspensosTextCtrl->Clear();
+        filaBloqueadosTextCtrl->Clear();
+        filaAuxiliarTextCtrl->Clear();
     }
 
     void exibirProcessosNasCpus() {
@@ -241,15 +329,6 @@ private:
         }
         
         //Refresh no frame
-        cpuTextCtrl->Refresh();
-        cpuTextCtrl->Update();
-    }
-    
-    void updateInfoText(const wxString& info) {
-        //Atualiza o frame
-        cpuTextCtrl->SetValue(info); 
-
-        //Garante que a área de texto seja redesenhada depois de atualizar
         cpuTextCtrl->Refresh();
         cpuTextCtrl->Update();
     }
