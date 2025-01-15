@@ -18,10 +18,10 @@ public:
         mainSizer = new wxBoxSizer(wxVERTICAL);
         SetSizer(mainSizer);
 
-        wxButton* buttonEscalonar = new wxButton(this, wxID_ANY, "Escalonar", wxPoint(10, 500), wxSize(150, 40));
-        wxButton* buttonGerarProcesso = new wxButton(this, wxID_ANY, "Gerar Processo", wxPoint(210, 500), wxSize(150, 40));
-        wxButton* buttonLigarSimulador = new wxButton(this, wxID_ANY, "Toggle Simulador", wxPoint(410, 500), wxSize(150, 40));
-        wxButton* criarProcessoButton = new wxButton(this, wxID_ANY, "Criar Processo", wxPoint(610, 500), wxSize(150, 40));
+        wxButton* buttonEscalonar = new wxButton(this, wxID_ANY, "Escalonar", wxPoint(210, 500), wxSize(150, 40));
+        wxButton* buttonGerarProcesso = new wxButton(this, wxID_ANY, "Gerar Processo", wxPoint(410, 500), wxSize(150, 40));
+        wxButton* buttonLigarSimulador = new wxButton(this, wxID_ANY, "Toggle Simulador", wxPoint(610, 500), wxSize(150, 40));
+        wxButton* criarProcessoButton = new wxButton(this, wxID_ANY, "Criar Processo", wxPoint(810, 500), wxSize(150, 40));
         
         wxFont fontNegrito(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
 
@@ -64,6 +64,9 @@ public:
         memoriaDisponivelLabel = new wxStaticText(this, wxID_ANY, "Memória disponível: ", wxPoint(1150, 480));
         memoriaDisponivelLabel->SetFont(fontNegrito);
 
+        tempoLabel = new wxStaticText(this, wxID_ANY, "Tempo Atual: ", wxPoint(15, 480));
+        tempoLabel->SetFont(fontNegrito);
+
         cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 10), wxSize(300, 345));
         processosPanel = new wxPanel(this, wxID_ANY, wxPoint(300, 10), wxSize(300, 500));
         filaProntosPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 560), wxSize(600, 40));
@@ -105,7 +108,8 @@ public:
 
         SetSizer(mainSizer);
         Layout();
-        AtualizarMemoriaDisponivel();                           
+        atualizarMemoriaDisponivel();
+        atualizarTempoAtual();                           
     }
 
     ~MyFrame(){
@@ -132,7 +136,8 @@ private:
     wxPanel* filaAuxiliarPanel;
     wxPanel* processosPanel;
 
-    wxStaticText* memoriaDisponivelLabel;
+    wxStaticText *memoriaDisponivelLabel;
+    wxStaticText *tempoLabel;
     wxStaticText *textoCpu;
     wxStaticText *textoProcessos;
     wxStaticText *textoProntos;
@@ -166,9 +171,13 @@ private:
         }
     }
 
-    void AtualizarMemoriaDisponivel() {
+    void atualizarMemoriaDisponivel() {
         int memoriaDisponivel = gerenciadorInstance->getMemoriaDisponivel();
         memoriaDisponivelLabel->SetLabel("Memória disponível: " + std::to_string(memoriaDisponivel) + " MB");
+    }
+
+    void atualizarTempoAtual() {
+        tempoLabel->SetLabel("Tempo Atual: " + std::to_string(tempoAtual));
     }
 
     //Método de loop do simulador. Desligado ao clicar novamente em toggle (simuladorAtivo := false)
@@ -186,11 +195,12 @@ private:
             
             //Faz GUI rodar na thread principal
             CallAfter([this]() {
+                atualizarTempoAtual();
                 exibirProcessosNasCpus();
                 exibirTodosOsProcessos();
                 exibirTodasAsFilas();
                 memoriaPanel->Refresh();
-                AtualizarMemoriaDisponivel();
+                atualizarMemoriaDisponivel();
             });
         
             //Pausa por 2 segundos
@@ -200,12 +210,13 @@ private:
 
     void OnButtonEscalonarClick(wxCommandEvent& event) {
         tempoAtual++;
+        atualizarTempoAtual();
         gerenciadorInstance->getDespachante()->escalonar();
         exibirProcessosNasCpus();
         exibirTodosOsProcessos();
         exibirTodasAsFilas();
         memoriaPanel->Refresh();
-        AtualizarMemoriaDisponivel();
+        atualizarMemoriaDisponivel();
     }
 
     void OnPaintPanel(wxPaintEvent& event) {
@@ -231,7 +242,7 @@ private:
         exibirTodosOsProcessos();
         exibirTodasAsFilas();
         memoriaPanel->Refresh();
-        AtualizarMemoriaDisponivel();
+        atualizarMemoriaDisponivel();
     }
 
     void exibirFila(const std::queue<Processo*>& fila,wxTextCtrl *textoCtrl){
@@ -428,6 +439,8 @@ private:
         if (resultado == wxID_OK) {
             memoriaPanel->Refresh();
             exibirTodosOsProcessos();
+            exibirTodasAsFilas();
+            atualizarMemoriaDisponivel();
         }
     };
 };
