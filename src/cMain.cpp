@@ -186,7 +186,6 @@ private:
             
             //Faz GUI rodar na thread principal
             CallAfter([this]() {
-                limparTodasAsFilas();
                 exibirProcessosNasCpus();
                 exibirTodosOsProcessos();
                 exibirTodasAsFilas();
@@ -200,7 +199,6 @@ private:
     }
 
     void OnButtonEscalonarClick(wxCommandEvent& event) {
-        limparTodasAsFilas();
         tempoAtual++;
         gerenciadorInstance->getDespachante()->escalonar();
         exibirProcessosNasCpus();
@@ -230,8 +228,8 @@ private:
     void OnButtonGerarProcessoClick(wxCommandEvent& event) {
         Processo* novoProcesso = geradorInstance->gerarProcesso();
         despachanteInstance->tentaAlocarProcesso(novoProcesso);
-        
         exibirTodosOsProcessos();
+        exibirTodasAsFilas();
         memoriaPanel->Refresh();
         AtualizarMemoriaDisponivel();
     }
@@ -305,10 +303,11 @@ private:
     }
 
     void exibirTodasAsFilas(){
+        limparTodasAsFilas();
         exibirFila(despachanteInstance->getFilaProntos(),filaProntosTextCtrl);
         exibirFila(despachanteInstance->getFilaProntosSuspensos(),filaProntosSuspensosTextCtrl);
         exibirFila(despachanteInstance->getFilaBloqueados(),filaBloqueadosTextCtrl);
-        exibirFila(despachanteInstance->getFilaBloqueadosSuspensos(),filaBloqueadosTextCtrl);
+        exibirFila(despachanteInstance->getFilaBloqueadosSuspensos(),filaBloqueadosSuspensosTextCtrl);
         exibirFila(despachanteInstance->getFilaAuxiliar(),filaAuxiliarTextCtrl);
     }
 
