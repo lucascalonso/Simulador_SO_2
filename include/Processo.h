@@ -24,6 +24,7 @@ private:
     int duracaoIoTotal;
     int tempoRestanteCpu;
     bool fezIo;
+    wxColor cor;
     Estado estado;
 
 public:
@@ -53,5 +54,7 @@ public:
     void setTempoChegada(int tempo);
     int getTempoChegada();
     void setFezIo();
+    wxColor getCor() const;
+    wxColor gerarCorUnica(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram);
 };
 #endif

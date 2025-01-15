@@ -26,16 +26,9 @@ std::vector<Processo*> GeradorDeProcessos::gerarProcessos() {
     int numeroDeProcessos = poissonDistrib(generator);
 
     for (int i = 0; i < numeroDeProcessos; ++i) {
-        //Gera os atributos do processo
-        int duracaoCpu1 = distDuracao(generator);
-        int duracaoIo = distDuracao(generator);
-        int duracaoCpu2 = distDuracao(generator);
-        int ram = distRam(generator);
-
-        Processo* novoProcesso = new Processo(++ultimoId, duracaoCpu1, duracaoIo, duracaoCpu2, ram);
+        Processo* novoProcesso = gerarProcesso();
         novosProcessos.push_back(novoProcesso);
     }
 
     return novosProcessos;
 }
-

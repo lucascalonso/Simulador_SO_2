@@ -32,6 +32,6 @@ class GerenciadorMemoria{
         Despachante* getDespachante() {return despachante;};
         void deletarProcessos();
         std::set<Processo*> getProcessosADeletar();
-
+        Processo *recuperarProcessoPorId(int id);
 };
 #endif

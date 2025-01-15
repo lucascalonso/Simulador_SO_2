@@ -3,9 +3,11 @@
 #include "../include/globals.h"
 #include <iostream>
 #include <thread>
+#include <random>
 
 Processo::Processo(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram)
-    : id(id), duracaoCpu1(duracaoCpu1), duracaoIo(duracaoIo), duracaoCpu2(duracaoCpu2), ram(ram), estado(Estado::PRONTO), fezIo(false),duracaoIoTotal(duracaoIo)
+    : id(id), duracaoCpu1(duracaoCpu1), duracaoIo(duracaoIo), duracaoCpu2(duracaoCpu2), ram(ram), estado(Estado::PRONTO), fezIo(false),duracaoIoTotal(duracaoIo),
+    cor(gerarCorUnica(id,duracaoCpu1,duracaoIo,duracaoCpu2,ram))
 {   
     tempoChegada = tempoAtual;
 
@@ -84,6 +86,8 @@ void Processo::atualizarTempoCpu2(int tempo) {
     duracaoCpu2 = std::max(0, duracaoCpu2 - tempo);
 }
 
+wxColor Processo::getCor() const { return cor;}
+
 void Processo::atualizarTempoIo(int tempo) {
     duracaoIo = std::max(0, duracaoIo - tempo);
 }
@@ -95,3 +99,20 @@ void Processo::setFezIo(){
 }
 
 std::queue<Processo*> getFila(std::queue<Processo*> fila) {return fila;}
+
+wxColour Processo::gerarCorUnica(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram) {
+    std::mt19937 rng(id + ram + duracaoCpu1); // Gerador pseudoaleatório
+    std::uniform_int_distribution<int> dist(0, 255);
+
+    int r = (id * 50 + dist(rng)) % 256;
+    int g = (duracaoCpu1 * 30 + dist(rng)) % 256;
+    int b = (ram * 10 + dist(rng)) % 256;
+
+    wxColour cor(r, g, b);
+    if (!cor.IsOk()) {
+        std::cerr << "Cor inválida gerada para Processo ID: " << id
+                  << " R=" << r << ", G=" << g << ", B=" << b << std::endl;
+        return wxColour(0, 0, 0); // Retorna preto como fallback
+    }
+    return cor;
+}

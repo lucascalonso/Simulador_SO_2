@@ -45,7 +45,6 @@ public:
     void setGerenciadorMemoria(GerenciadorMemoria* gm);
     void tentaAlocarProcesso(Processo* processo);
     void adicionarBloqueado(Processo* processo);
-    Processo* recuperarProcessoPorId(int processoId);
     void tentarAlocarProcessosSuspensos();
     void decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocadosNoQuantum);
     void decrementaBloqueados(std::unordered_set<Processo*>& processosAlocadosNoQuantum);

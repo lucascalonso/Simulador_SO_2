@@ -77,6 +77,15 @@ void GerenciadorMemoria::deletarProcessos() {
     }
 }
 
+Processo* GerenciadorMemoria::recuperarProcessoPorId(int id) {
+    for (Processo* processo : despachante->getProcessosAtuais()) { // Itera pelos processos no conjunto
+        if (processo->getId() == id) { // Verifica se o ID coincide
+            return processo;
+        }
+    }
+    return nullptr;
+}
+
 int GerenciadorMemoria::getNumPaginas() const {return numPaginas;}
 int* GerenciadorMemoria::getMemoria() {return memoria;}
 std::set<Processo*> GerenciadorMemoria::getProcessosADeletar() {return processosADeletar;}
