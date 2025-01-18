@@ -27,7 +27,8 @@ void Despachante::tentaAlocarProcesso(Processo* processo) {
     //Se não tem memória, vai ou é mantido em fila prontos suspensos
     } else {
         if(processo->getEstadoString() == "PRONTO_SUSPENSO"){
-            std::cout << "Processo#" << processo->getId() << " mantido na fila de prontos suspensos. Memória insuficiente" << std::endl;
+            //Meio que irrelevante printar essa parte. Com muitos processos, chega a floodar o buffer
+            //std::cout << "Processo#" << processo->getId() << " mantido na fila de prontos suspensos. Memória insuficiente" << std::endl;
             filaProntosSuspensos.push(processo);
             return;
         }
@@ -177,7 +178,7 @@ void Despachante::escalonar(){
             // Tenta desalocar bloqueados para prontos suspensos poderem ir p/ prontos e escalonados
             if (!filaBloqueados.empty() && !filaProntosSuspensos.empty()) {
                 std::cout << "CPU #" << i + 1 
-                        << " buscando desalocar processos bloqueados para prontos suspensos.\n";
+                        << " buscando suspender processos bloqueados para alocar prontos suspensos.\n";
 
                 Processo* processoProntoSuspenso = filaProntosSuspensos.front();
                 int memoriaNecessaria = processoProntoSuspenso->getRam();
@@ -243,7 +244,8 @@ void Despachante::escalonar(){
 
                 std::cout << "Processo #" << processoAtual->getId() 
                           << " finalizado e " <<processoAtual->getRam() << " MB liberados. Turnaround Time: "<< processoAtual->turnAroundTime <<
-                          std::endl;
+                          " - Normalizado: " << (float)processoAtual->turnAroundTime / (processoAtual->getDuracaoCpu1() + processoAtual->getDuracaoCpu2()
+                          + processoAtual->getDuracaoIoTotal()) << std::endl;
                           
                 
                 //Como Estado do Processo é TERMINADO, será deletado no método abaixo
@@ -350,7 +352,7 @@ int Despachante::desalocarAteNecessario(int memoriaNecessaria, std::vector<Proce
                   return a->getDuracaoIo() > b->getDuracaoIo();
               });
 
-    // Desaloca processos até atingir a memória necessária
+    //Suspende processos até atingir a memória necessária
     for (Processo* processo : processosParaDesalocar) {
         if (memoriaNecessaria <= 0) break;
 
@@ -375,8 +377,6 @@ int Despachante::desalocarAteNecessario(int memoriaNecessaria, std::vector<Proce
             //Verifica se o processo ainda está no vetor após a desalocação
             if (processo->getEstadoString() != "BLOQUEADO_SUSPENSO") {
                 filaBloqueados.push(processo);
-                std::cout << "Processo #" << processo->getId()
-                        << " reinserido na fila de bloqueados. \n";
             }
         }
     }

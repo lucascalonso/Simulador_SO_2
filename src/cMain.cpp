@@ -456,7 +456,7 @@ private:
 
             } else {
                 //Nesse caso, a CPU está ociosa. Imprime assim como em imprimirFila()
-                msg.Printf("CPU #%d: CPU Ociosa. Aguardando...\n\n", i + 1);
+                msg.Printf("CPU #%d: CPU Ocioso. Aguardando...\n\n", i + 1);
                 cpuTextCtrl->AppendText(msg);
             }
         }
