@@ -22,6 +22,7 @@ private:
     int duracaoCpu2;
     int duracaoIo;
     int duracaoIoTotal;
+    int serviceTime;
     int tempoRestanteCpu;
     bool fezIo;
     wxColor cor;

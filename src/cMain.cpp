@@ -1,4 +1,5 @@
 #include <wx/wx.h>
+#include <wx/utils.h>
 #include "../include/Processo.h"
 #include "../include/GeradorDeProcessos.h"
 #include "../include/Despachante.h"
@@ -8,22 +9,80 @@
 #include <random>
 #include <thread>
 #include <chrono>
+#include <sstream>
+
+class wxCoutRedirector : public std::streambuf {
+    public:
+        wxCoutRedirector(wxWindow* parent, wxTextCtrl* textCtrl)
+        : parent(parent),textCtrl(textCtrl), originalBuffer(std::cout.rdbuf()) {
+        std::cout.rdbuf(this);
+    }
+
+
+        ~wxCoutRedirector() {
+            std::cout.rdbuf(originalBuffer);
+        }
+
+        std::string getBuffer() {return buffer;}
+
+    protected:
+        virtual std::streamsize xsputn(const char* s, std::streamsize n) override {
+            std::lock_guard<std::mutex> lock(bufferMutex);
+            buffer.append(s, n);
+            parent->CallAfter([this]() {
+                flushToTextCtrl();
+            });
+            return n;
+        }
+
+        virtual int overflow(int c) override {
+            if (c != EOF) {
+                char buf = static_cast<char>(c);
+                xsputn(&buf, 1);
+            }
+            return c;
+        }
+
+    private:
+        wxTextCtrl* textCtrl;
+        std::streambuf* originalBuffer;
+        std::string buffer;
+        std::mutex bufferMutex;
+        wxWindow *parent;
+
+        void flushToTextCtrl() {
+            std::lock_guard<std::mutex> lock(bufferMutex);
+            textCtrl->AppendText(buffer);
+            buffer.clear();
+            parent->CallAfter([this]() {
+                textCtrl->Refresh();
+            });
+        }
+};
 
 class MyFrame : public wxFrame {
 public:
     MyFrame(GerenciadorMemoria* gm, GeradorDeProcessos* gp, Despachante* dp)
-        : wxFrame(nullptr, wxID_ANY, "Simulador Round-robin", wxDefaultPosition, wxSize(1680, 900)),
+        : wxFrame(nullptr, wxID_ANY, "Simulador Round-robin", wxDefaultPosition, wxSize(1680, 950)), 
           gerenciadorInstance(gm), geradorInstance(gp), despachanteInstance(dp), simuladorAtivo(false) {
         
+        //definindo na ordem correta para coutRedirector, buffer que display os couts dos outros métodos do backend
+        textoPanel = new wxPanel(this, wxID_ANY, wxPoint(920, 520), wxSize(600, 385));
+        textoTextCtrl = new wxTextCtrl(textoPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(600, 360),
+                                    wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+        coutRedirector = new wxCoutRedirector(this, textoTextCtrl);
+
+
         mainSizer = new wxBoxSizer(wxVERTICAL);
         SetSizer(mainSizer);
 
-        wxButton* buttonEscalonar = new wxButton(this, wxID_ANY, "Escalonar", wxPoint(210, 500), wxSize(150, 40));
-        wxButton* buttonGerarProcesso = new wxButton(this, wxID_ANY, "Gerar Processo", wxPoint(410, 500), wxSize(150, 40));
-        wxButton* buttonLigarSimulador = new wxButton(this, wxID_ANY, "Toggle Simulador", wxPoint(610, 500), wxSize(150, 40));
-        wxButton* criarProcessoButton = new wxButton(this, wxID_ANY, "Criar Processo", wxPoint(810, 500), wxSize(150, 40));
+        wxButton* buttonEscalonar = new wxButton(this, wxID_ANY, "Escalonar", wxPoint(10, 500), wxSize(150, 40));
+        wxButton* buttonGerarProcesso = new wxButton(this, wxID_ANY, "Gerar Processo", wxPoint(210, 500), wxSize(150, 40));
+        wxButton* buttonLigarSimulador = new wxButton(this, wxID_ANY, "Toggle Simulador", wxPoint(410, 500), wxSize(150, 40));
+        wxButton* criarProcessoButton = new wxButton(this, wxID_ANY, "Criar Processo", wxPoint(610, 500), wxSize(150, 40));
         
         wxFont fontNegrito(12, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_BOLD);
+        textoTextCtrl->SetFont(fontNegrito);
 
         buttonEscalonar->SetFont(fontNegrito);
         buttonGerarProcesso->SetFont(fontNegrito);
@@ -69,6 +128,7 @@ public:
 
         cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 10), wxSize(300, 345));
         processosPanel = new wxPanel(this, wxID_ANY, wxPoint(300, 10), wxSize(300, 500));
+        textoPanel = new wxPanel(this, wxID_ANY, wxPoint(780, 550), wxSize(900, 345));
         filaProntosPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 560), wxSize(600, 40));
         filaAuxiliarPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 620), wxSize(600, 40));
         filaBloqueadosPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 680), wxSize(600, 40));
@@ -81,7 +141,7 @@ public:
         memoriaPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintMemoria, this);
 
         cpuPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
-        cpuPanel->Refresh();
+        textoPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
         processosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
         filaProntosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
         filaAuxiliarPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
@@ -89,18 +149,18 @@ public:
         filaProntosSuspensosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
         filaBloqueadosSuspensosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
 
-        filaProntosTextCtrl = new wxTextCtrl(filaProntosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+        filaProntosTextCtrl = new wxTextCtrl(filaProntosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(610, 40), 
                                  wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
-        filaProntosSuspensosTextCtrl = new wxTextCtrl(filaProntosSuspensosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+        filaProntosSuspensosTextCtrl = new wxTextCtrl(filaProntosSuspensosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(610, 40), 
                                  wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
-        filaBloqueadosTextCtrl = new wxTextCtrl(filaBloqueadosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+        filaBloqueadosTextCtrl = new wxTextCtrl(filaBloqueadosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(610, 40), 
                                  wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
-        filaBloqueadosSuspensosTextCtrl = new wxTextCtrl(filaBloqueadosSuspensosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
+        filaBloqueadosSuspensosTextCtrl = new wxTextCtrl(filaBloqueadosSuspensosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(610, 40), 
                                  wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
-        filaAuxiliarTextCtrl = new wxTextCtrl(filaAuxiliarPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(1600, 680), 
-                                 wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
+        filaAuxiliarTextCtrl = new wxTextCtrl(filaAuxiliarPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(610, 40), 
+                                 wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);                      
         
-        cpuTextCtrl = new wxTextCtrl(cpuPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),
+        cpuTextCtrl = new wxTextCtrl(cpuPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(310, 345),
                                       wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
 
         processosTextCtrl = new wxTextCtrl(processosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),
@@ -117,6 +177,7 @@ public:
         if (simuladorThread.joinable()) {
             simuladorThread.join();
         }
+        delete coutRedirector;
     }
 
 private:
@@ -129,12 +190,15 @@ private:
     
     wxPanel* memoriaPanel;
     wxPanel* cpuPanel;
+    wxPanel* textoPanel;
     wxPanel* filaProntosPanel;
     wxPanel* filaProntosSuspensosPanel;
     wxPanel* filaBloqueadosPanel;
     wxPanel* filaBloqueadosSuspensosPanel;
     wxPanel* filaAuxiliarPanel;
     wxPanel* processosPanel;
+
+    wxCoutRedirector *coutRedirector;
 
     wxStaticText *memoriaDisponivelLabel;
     wxStaticText *tempoLabel;
@@ -147,6 +211,7 @@ private:
     wxStaticText *textoAuxiliar;
 
     wxTextCtrl* cpuTextCtrl;
+    wxTextCtrl* textoTextCtrl;
     wxTextCtrl* processosTextCtrl;
     wxTextCtrl* filaProntosTextCtrl;
     wxTextCtrl* filaProntosSuspensosTextCtrl;
@@ -169,6 +234,13 @@ private:
             }
             wxMessageBox("Simulador desligado!", "Simulador desligado!", wxOK | wxICON_INFORMATION);
         }
+    }
+
+    void flushToTextCtrl() {
+        std::string buffer = coutRedirector->getBuffer();
+        textoTextCtrl->AppendText(buffer);
+        textoTextCtrl->ShowPosition(textoTextCtrl->GetLastPosition());
+        buffer.clear();
     }
 
     void atualizarMemoriaDisponivel() {
@@ -216,6 +288,7 @@ private:
         exibirTodosOsProcessos();
         exibirTodasAsFilas();
         memoriaPanel->Refresh();
+        textoPanel->Refresh();
         atualizarMemoriaDisponivel();
     }
 
@@ -242,11 +315,14 @@ private:
         exibirTodosOsProcessos();
         exibirTodasAsFilas();
         memoriaPanel->Refresh();
+        textoPanel->Refresh();
         atualizarMemoriaDisponivel();
     }
 
     void exibirFila(const std::queue<Processo*>& fila,wxTextCtrl *textoCtrl){
         
+        if(fila.empty()) return;
+
         std::queue<Processo*> copiaFila = fila;
         
         while (!copiaFila.empty()) {
@@ -273,6 +349,7 @@ private:
 
         textoCtrl->Refresh();
         textoCtrl->Update();
+        textoPanel->Refresh();
     }
 
     void exibirTodosOsProcessos() {

@@ -40,7 +40,6 @@ private:
 public:
 
     Despachante() : cpusDisponiveis() {}
-    void imprimirFila(const std::queue<Processo*>& fila, const std::string& nomeFila);
     explicit Despachante(int quantum,int cpusDisponiveis);
     void setGerenciadorMemoria(GerenciadorMemoria* gm);
     void tentaAlocarProcesso(Processo* processo);
