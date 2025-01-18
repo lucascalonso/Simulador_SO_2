@@ -118,7 +118,8 @@ public:
         wxStaticText *textoBloqueadosSuspensos = new wxStaticText(this, wxID_ANY, "Bloqueados Suspensos", wxPoint(15, 795));
         textoBloqueadosSuspensos->SetFont(fontNegrito);
 
-        
+        wxStaticText *textoEventos = new wxStaticText(this, wxID_ANY, "Eventos", wxPoint(935, 515));
+        textoEventos->SetFont(fontNegrito);
 
 
         memoriaDisponivelLabel = new wxStaticText(this, wxID_ANY, "Memória disponível: ", wxPoint(1150, 480));
@@ -210,6 +211,7 @@ private:
     wxStaticText *textoBloqueados;
     wxStaticText *textoBloqueadosSuspensos;
     wxStaticText *textoAuxiliar;
+    wxStaticText *textoEventos;
 
     wxTextCtrl* cpuTextCtrl;
     wxTextCtrl* textoTextCtrl;
@@ -277,8 +279,8 @@ private:
                 atualizarMemoriaDisponivel();
             });
         
-            //Pausa por 2 segundos
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+            //Pausa por 1 segundo
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     }
 
