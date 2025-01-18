@@ -68,11 +68,11 @@ void Despachante::escalonar(){
     //Evita que o mesmo Processo seja executado em CPUs diferentes durante u.t
     //Também controla quais processos terão seu tempo de I/O decrementado
     //Se um processo executou em uma u.t e foi bloqueado, não pode ter seu duracaoIo decrementado nesse ciclo
-    processosAlocadosNoQuantum.clear();
+    processosAlocados.clear();
 
     gerenciadorMemoria->deletarProcessos();
 
-    std::cout << "-------------------------------------------------------------------" << tempoAtual << " u.t ------------------------------------------------------------------\n";
+    std::cout << "------------------------------------------------------------------" << tempoAtual << " u.t -----------------------------------------------------------------\n";
     
     tentarAlocarProcessosSuspensos();
 
@@ -83,10 +83,10 @@ void Despachante::escalonar(){
         processoAtual = cpusDisponiveis[i].P;
         
         //Se tem processo no CPU e não executou nessa u.t (pode ter sofrido timeout no CPU#1 e executar na CPU#2 caso não tenha o check do set)
-        if(processoAtual && (processosAlocadosNoQuantum.find(processoAtual) == processosAlocadosNoQuantum.end())){
+        if(processoAtual && (processosAlocados.find(processoAtual) == processosAlocados.end())){
             processoAtual->executarCpu();
             cpusDisponiveis[i].tempo_executando_processo++;
-            processosAlocadosNoQuantum.insert(processoAtual);
+            processosAlocados.insert(processoAtual);
             
             //Checa se o processo já executou por 1 quantum e não terminou
             if(cpusDisponiveis[i].tempo_executando_processo == quantum  && !processoAtual->checarTerminoDaFase()){
@@ -112,7 +112,7 @@ void Despachante::escalonar(){
                 filaAuxiliar.pop();
                 
                 //Se o processo está no set, já está alocado a uma CPU nesse quantum.
-                while ((processosAlocadosNoQuantum.find(processoAtual) != processosAlocadosNoQuantum.end()) && contaFila < tamanhoInicial) {
+                while ((processosAlocados.find(processoAtual) != processosAlocados.end()) && contaFila < tamanhoInicial) {
                     filaAuxiliar.push(processoAtual);
                     processoAtual = filaAuxiliar.front();
                     filaAuxiliar.pop();
@@ -122,9 +122,9 @@ void Despachante::escalonar(){
                 }
                 
                 //Se encontrou processo ainda não presente no set, vai executa-lo 
-                if(contaFila <= tamanhoInicial && (processosAlocadosNoQuantum.find(processoAtual) == processosAlocadosNoQuantum.end())){
+                if(contaFila <= tamanhoInicial && (processosAlocados.find(processoAtual) == processosAlocados.end())){
                     cpusDisponiveis[i].P = processoAtual;
-                    processosAlocadosNoQuantum.insert(processoAtual);
+                    processosAlocados.insert(processoAtual);
                     processoAtual->executarCpu();
                     cpusDisponiveis[i].tempo_executando_processo = 1;
                     goto checkaTermino;
@@ -147,7 +147,7 @@ void Despachante::escalonar(){
                 filaProntos.pop();
 
                 //Se o processo está no set, já está alocado a uma CPU nesse quantum.
-                while ((processosAlocadosNoQuantum.find(processoAtual) != processosAlocadosNoQuantum.end()) && contaFila < tamanhoInicial) {
+                while ((processosAlocados.find(processoAtual) != processosAlocados.end()) && contaFila < tamanhoInicial) {
                     filaProntos.push(processoAtual);
                     processoAtual = filaProntos.front();
                     filaProntos.pop();
@@ -156,9 +156,9 @@ void Despachante::escalonar(){
                     //Busca até encontrar processo que não esteja alocado ou percorra toda a fila
                 }
                 //Se encontrou processo
-                if(contaFila <= tamanhoInicial && (processosAlocadosNoQuantum.find(processoAtual) == processosAlocadosNoQuantum.end())){
+                if(contaFila <= tamanhoInicial && (processosAlocados.find(processoAtual) == processosAlocados.end())){
                     cpusDisponiveis[i].P = processoAtual;
-                    processosAlocadosNoQuantum.insert(processoAtual);
+                    processosAlocados.insert(processoAtual);
                     processoAtual->executarCpu();
                     cpusDisponiveis[i].tempo_executando_processo = 1;
                     goto checkaTermino;
@@ -188,7 +188,7 @@ void Despachante::escalonar(){
                 // Percorre a fila de prontos suspensos verificando condições
                 while (contaFila < countProntosSuspensos) {
                     //Checa se o processo já foi processado no quantum atual
-                    if (processosAlocadosNoQuantum.find(processoProntoSuspenso) == processosAlocadosNoQuantum.end()) {
+                    if (processosAlocados.find(processoProntoSuspenso) == processosAlocados.end()) {
                         //Tenta desalocar os bloqueados para liberar memória suficiente
                         if (desalocarBloqueadosParaProntosSuspensos(memoriaNecessaria)) {
                             break;
@@ -266,8 +266,8 @@ void Despachante::escalonar(){
     }
     //Decrementa 1 u.t de processos em I/O que não foram executados nessa u.t
     //Set é passado para controlar quais processos serão decrementados
-    decrementaBloqueados(processosAlocadosNoQuantum);
-    decrementaBloqueadosSuspensos(processosAlocadosNoQuantum);
+    decrementaBloqueados(processosAlocados);
+    decrementaBloqueadosSuspensos(processosAlocados);
 }
 
 void Despachante::setGerenciadorMemoria(GerenciadorMemoria* gm) {
@@ -276,7 +276,7 @@ void Despachante::setGerenciadorMemoria(GerenciadorMemoria* gm) {
 
 //Decrementa tempo dos processos bloqueados suspensos, mandando pra fila prontos suspensos caso termine I/O.
 //Tem que executar esse método no final do quantum, após execução dos CPUs e pular iteração caso o processo esteja no set.
-void Despachante::decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocadosNoQuantum) {
+void Despachante::decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocados) {
     if (filaBloqueadosSuspensos.empty()) return;
 
     size_t bloqueadosSuspensosCount = filaBloqueadosSuspensos.size();
@@ -287,7 +287,7 @@ void Despachante::decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& p
         filaBloqueadosSuspensos.pop();
 
         //Se processo nullptr ou processo já foi processado durante quantum (pois esse método é chamado no final de escalonar() )
-        if (!processoAtual || processosAlocadosNoQuantum.find(processoAtual) != processosAlocadosNoQuantum.end()){
+        if (!processoAtual || processosAlocados.find(processoAtual) != processosAlocados.end()){
             filaBloqueadosSuspensos.push(processoAtual);
             continue;
         } 
@@ -309,7 +309,7 @@ void Despachante::decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& p
 }
 
 //Similar ao método anterior, mas para filas diferentes 
-void Despachante::decrementaBloqueados(std::unordered_set<Processo*>& processosAlocadosNoQuantum) {
+void Despachante::decrementaBloqueados(std::unordered_set<Processo*>& processosAlocados) {
     if (filaBloqueados.empty()) return;
 
     size_t bloqueadosCount = filaBloqueados.size();
@@ -320,7 +320,7 @@ void Despachante::decrementaBloqueados(std::unordered_set<Processo*>& processosA
         filaBloqueados.pop();
 
         //Se processo nullptr ou processo já foi processado durante quantum (esse método é chamado no final de escalonar() )
-        if (!processoAtual || processosAlocadosNoQuantum.find(processoAtual) != processosAlocadosNoQuantum.end()){
+        if (!processoAtual || processosAlocados.find(processoAtual) != processosAlocados.end()){
             filaBloqueados.push(processoAtual);
             continue;
         } 
@@ -445,7 +445,7 @@ void Despachante::adicionarProcessoNaFilaProntosSuspensos(Processo* processo) {
 
 std::set<Processo*,ProcessoComparator> Despachante::getProcessosAtuais(){return processosAtuais;}
 
-std::unordered_set<Processo*> Despachante::getProcessosAlocadosNoQuantum() {return processosAlocadosNoQuantum;}
+std::unordered_set<Processo*> Despachante::getprocessosAlocados() {return processosAlocados;}
 
 std::queue<Processo*> Despachante::getFilaProntos() { return filaProntos;}
 std::queue<Processo*> Despachante::getFilaProntosSuspensos() { return filaProntosSuspensos;}

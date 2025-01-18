@@ -18,6 +18,8 @@ public:
     GeradorDeProcessos(double lambda, int seed = std::time(nullptr));
     std::vector<Processo*> gerarProcessos();
     Processo* gerarProcesso();
+    void setLambda(double novoLambda);
+    int getUltimoId();
 };
 
 #endif

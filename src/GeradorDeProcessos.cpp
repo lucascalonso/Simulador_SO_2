@@ -32,3 +32,9 @@ std::vector<Processo*> GeradorDeProcessos::gerarProcessos() {
 
     return novosProcessos;
 }
+
+void GeradorDeProcessos::setLambda(double novoLambda){
+    lambda = novoLambda;
+}
+
+int GeradorDeProcessos::getUltimoId() { return ultimoId; }

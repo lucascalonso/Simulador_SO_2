@@ -33,7 +33,7 @@ private:
     std::queue<Processo*> filaAuxiliar;
     GerenciadorMemoria* gerenciadorMemoria;
     std::set<Processo*,ProcessoComparator> processosAtuais;
-    std::unordered_set<Processo*> processosAlocadosNoQuantum;
+    std::unordered_set<Processo*> processosAlocados;
     int quantum;
     int numCpus;
 
@@ -45,8 +45,8 @@ public:
     void tentaAlocarProcesso(Processo* processo);
     void adicionarBloqueado(Processo* processo);
     void tentarAlocarProcessosSuspensos();
-    void decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocadosNoQuantum);
-    void decrementaBloqueados(std::unordered_set<Processo*>& processosAlocadosNoQuantum);
+    void decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocados);
+    void decrementaBloqueados(std::unordered_set<Processo*>& processosAlocados);
     void desbloquearProntosSuspensos();
     bool desalocarBloqueadosParaProntosSuspensos(int memoriaNecessaria);
     void adicionarProcessoNaFilaProntos(Processo* processo);
@@ -57,7 +57,7 @@ public:
     std::set<Processo*,ProcessoComparator> getProcessosAtuais();
     int getNumCpus(){return numCpus;};
     CPU* getCpusDisponiveis(){return cpusDisponiveis;};
-    std::unordered_set<Processo*> getProcessosAlocadosNoQuantum();
+    std::unordered_set<Processo*> getprocessosAlocados();
     std::queue<Processo*> getFilaProntos();
     std::queue<Processo*> getFilaProntosSuspensos();
     std::queue<Processo*> getFilaBloqueados();
