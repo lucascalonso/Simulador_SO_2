@@ -97,10 +97,10 @@ public:
         criarProcessoButton->Bind(wxEVT_BUTTON,&MyFrame::OnCriarProcesso, this);
 
         
-        wxStaticText *textoCpu = new wxStaticText(this, wxID_ANY, "Processos em execução", wxPoint(75, 5));
+        wxStaticText *textoCpu = new wxStaticText(this, wxID_ANY, "Processos executando", wxPoint(85, 5));
         textoCpu->SetFont(fontNegrito);
 
-        wxStaticText *textoProcessos = new wxStaticText(this, wxID_ANY, "Processos", wxPoint(420, 5));
+        wxStaticText *textoProcessos = new wxStaticText(this, wxID_ANY, "Processos em execução", wxPoint(390, 5));
         textoProcessos->SetFont(fontNegrito);
 
         wxStaticText *textoProntos = new wxStaticText(this, wxID_ANY, "Prontos", wxPoint(15, 555));
