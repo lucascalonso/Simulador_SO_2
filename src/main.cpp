@@ -11,7 +11,7 @@
 #include <chrono>
 #include <sstream>
 
-//Casse para redirecionar couts para textoTextCtrl da GUI
+//Casse para redirecionar couts para textoTextCtrl da Simulador
 class wxCoutRedirector : public std::streambuf {
     public:
         wxCoutRedirector(wxWindow* parent, wxTextCtrl* textCtrl)
@@ -61,10 +61,10 @@ class wxCoutRedirector : public std::streambuf {
         }
 };
 
-//Frame principal da GUI
-class MyFrame : public wxFrame {
+//Frame principal da Simulador
+class Simulador : public wxFrame {
 public:
-    MyFrame(GerenciadorMemoria* gm, GeradorDeProcessos* gp, Despachante* dp)
+    Simulador(GerenciadorMemoria* gm, GeradorDeProcessos* gp, Despachante* dp)
         : wxFrame(nullptr, wxID_ANY, "Simulador Round-robin", wxDefaultPosition, wxSize(1680, 950)), 
           gerenciadorInstance(gm), geradorInstance(gp), despachanteInstance(dp), simuladorAtivo(false) {
         
@@ -91,10 +91,10 @@ public:
         criarProcessoButton->SetFont(fontNegrito);
         
         
-        buttonEscalonar->Bind(wxEVT_BUTTON, &MyFrame::OnButtonEscalonarClick, this);
-        buttonGerarProcesso->Bind(wxEVT_BUTTON, &MyFrame::OnButtonGerarProcessoClick, this);
-        buttonLigarSimulador->Bind(wxEVT_BUTTON, &MyFrame::OnButtonLigarSimuladorClick, this);
-        criarProcessoButton->Bind(wxEVT_BUTTON,&MyFrame::OnCriarProcesso, this);
+        buttonEscalonar->Bind(wxEVT_BUTTON, &Simulador::OnButtonEscalonarClick, this);
+        buttonGerarProcesso->Bind(wxEVT_BUTTON, &Simulador::OnButtonGerarProcessoClick, this);
+        buttonLigarSimulador->Bind(wxEVT_BUTTON, &Simulador::OnButtonLigarSimuladorClick, this);
+        criarProcessoButton->Bind(wxEVT_BUTTON,&Simulador::OnCriarProcesso, this);
 
         
         wxStaticText *textoCpu = new wxStaticText(this, wxID_ANY, "Processos executando", wxPoint(85, 5));
@@ -140,16 +140,16 @@ public:
 
         memoriaPanel = new wxPanel(this, wxID_ANY, wxPoint(780, 10), wxSize(895, 448),wxBORDER_NONE);
         memoriaPanel->SetBackgroundColour(*wxWHITE);
-        memoriaPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintMemoria, this);
+        memoriaPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintMemoria, this);
 
-        cpuPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
-        textoPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
-        processosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
-        filaProntosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
-        filaAuxiliarPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
-        filaBloqueadosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
-        filaProntosSuspensosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
-        filaBloqueadosSuspensosPanel->Bind(wxEVT_PAINT, &MyFrame::OnPaintPanel, this);
+        cpuPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintPanel, this);
+        textoPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintPanel, this);
+        processosPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintPanel, this);
+        filaProntosPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintPanel, this);
+        filaAuxiliarPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintPanel, this);
+        filaBloqueadosPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintPanel, this);
+        filaProntosSuspensosPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintPanel, this);
+        filaBloqueadosSuspensosPanel->Bind(wxEVT_PAINT, &Simulador::OnPaintPanel, this);
 
         filaProntosTextCtrl = new wxTextCtrl(filaProntosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(610, 40), 
                                  wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
@@ -174,7 +174,7 @@ public:
         atualizarTempoAtual();                           
     }
 
-    ~MyFrame(){
+    ~Simulador(){
         simuladorAtivo = false;
         if (simuladorThread.joinable()) {
             simuladorThread.join();
@@ -228,7 +228,7 @@ private:
     void OnButtonLigarSimuladorClick(wxCommandEvent& event) {
         if (!simuladorAtivo) {
             simuladorAtivo = true;
-            simuladorThread = std::thread(&MyFrame::rodarSimulador, this);
+            simuladorThread = std::thread(&Simulador::rodarSimulador, this);
             wxMessageBox("Simulador ligado!", "Simulador ligado!", wxOK | wxICON_INFORMATION);
         } else {
             simuladorAtivo = false;
@@ -269,7 +269,7 @@ private:
             tempoAtual++;
             gerenciadorInstance->getDespachante()->escalonar();
             
-            //Faz GUI rodar na thread principal
+            //Faz Simulador rodar na thread principal
             CallAfter([this]() {
                 atualizarTempoAtual();
                 exibirProcessosNasCpus();
@@ -280,7 +280,7 @@ private:
             });
         
             //Pausa por 1 segundo
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+            std::this_thread::sleep_for(std::chrono::milliseconds(200));
         }
     }
 
@@ -534,7 +534,7 @@ public:
         GeradorDeProcessos* gerador = new GeradorDeProcessos(0.5);
         tempoAtual = 0;
 
-        MyFrame* frame = new MyFrame(gerenciador,gerador,despachante);
+        Simulador* frame = new Simulador(gerenciador,gerador,despachante);
         frame->Show(true);
         return true;
     }
