@@ -78,8 +78,8 @@ void GerenciadorMemoria::deletarProcessos() {
 }
 
 Processo* GerenciadorMemoria::recuperarProcessoPorId(int id) {
-    for (Processo* processo : despachante->getProcessosAtuais()) { // Itera pelos processos no conjunto
-        if (processo->getId() == id) { // Verifica se o ID coincide
+    for (Processo* processo : despachante->getProcessosAtuais()) { 
+        if (processo->getId() == id) {
             return processo;
         }
     }

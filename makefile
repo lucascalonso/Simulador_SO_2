@@ -1,4 +1,3 @@
-# Defina o compilador  /opt/homebrew/bin/g++-14
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
     CXX = clang++
@@ -6,7 +5,6 @@ else
     CXX = g++
 endif
 
-# Flags de compilação e linkagem
 CXXFLAGS = -std=c++11 -stdlib=libc++ `wx-config --cxxflags` -I./include
 LDFLAGS = -stdlib=libc++ `wx-config --libs`
 SRC = $(wildcard src/*.cpp)

@@ -186,7 +186,7 @@ private:
     GerenciadorMemoria* gerenciadorInstance;
     GeradorDeProcessos* geradorInstance;
     Despachante* despachanteInstance;
-    std::atomic<bool> simuladorAtivo; //atomic para não dar erro de threads
+    std::atomic<bool> simuladorAtivo;
     std::thread simuladorThread;
     
     
@@ -457,7 +457,7 @@ private:
                 cpuTextCtrl->SetStyle(inicio, fim, textoCor);
 
             } else {
-                //Nesse caso, a CPU está ociosa. Imprime assim como em imprimirFila()
+                //Nesse caso, a CPU está ociosa. Imprime assim como em escalonar()
                 msg.Printf("CPU #%d: CPU Ocioso. Aguardando...\n\n", i + 1);
                 cpuTextCtrl->AppendText(msg);
             }
@@ -479,7 +479,7 @@ private:
 
         const auto& memoria = gerenciadorInstance->getMemoria();
         const int totalPaginas = gerenciadorInstance->getNumPaginas();
-
+            
         for (int i = 0; i < totalPaginas;) {
             int processoId = memoria[i];
             int start = i;
