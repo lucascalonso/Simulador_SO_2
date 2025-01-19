@@ -47,12 +47,10 @@ public:
     void tentarAlocarProcessosSuspensos();
     void decrementaBloqueadosSuspensos(std::unordered_set<Processo*>& processosAlocados);
     void decrementaBloqueados(std::unordered_set<Processo*>& processosAlocados);
-    void desbloquearProntosSuspensos();
-    bool desalocarBloqueadosParaProntosSuspensos(int memoriaNecessaria);
-    void adicionarProcessoNaFilaProntos(Processo* processo);
-    void adicionarProcessoNaFilaProntosSuspensos(Processo* processo);
+    void tentarAlocarProcessosProntosSuspensos();
+    bool tentarSuspenderBloqueados(int memoriaNecessaria);
     void escalonar();
-    int desalocarAteNecessario(int memoriaNecessaria, std::vector<Processo*>& processosParaDesalocar);
+    int suspenderAteNecessario(int memoriaNecessaria, std::vector<Processo*>& processosParaDesalocar);
     void realocarProntosSuspensos();
     std::set<Processo*,ProcessoComparator> getProcessosAtuais();
     int getNumCpus(){return numCpus;};
