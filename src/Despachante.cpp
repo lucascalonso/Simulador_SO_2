@@ -60,7 +60,7 @@ void Despachante::escalonar(){
 
 
     //jaCheckouSuspensos para controlar se já tentou suspender bloqueados para alocar prontos suspensos
-    //evita loop infinito (vide linha 191 para mais detalhes)
+    //evita loop infinito (vide linha 193 explicação)
     bool jaCheckouSuspensos = false;
 
     Processo* processoAtual;
@@ -103,7 +103,7 @@ void Despachante::escalonar(){
         //Caso não tenha processo na CPU, precisa buscar em uma das filas
         else{
             
-            //Prioriza buscar processo na fila auxiliar
+            //Prioriza buscar processos na fila auxiliar
             if(!filaAuxiliar.empty()){
                 std::cout << "CPU#" << i+1 << " Buscando Processo na fila Auxiliar " << std::endl;
                 processoAtual = filaAuxiliar.front();

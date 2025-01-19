@@ -279,8 +279,8 @@ private:
                 atualizarMemoriaDisponivel();
             });
         
-            //Pausa por 1 segundo
-            std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            //Pausa por 2 segundos
+            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
         }
     }
 

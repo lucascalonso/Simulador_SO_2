@@ -100,8 +100,9 @@ void Processo::setFezIo(){
 
 std::queue<Processo*> getFila(std::queue<Processo*> fila) {return fila;}
 
+//Método gera cores randômicamente, facilitando visualização nao frame da GUI
 wxColour Processo::gerarCorUnica(int id, int duracaoCpu1, int duracaoIo, int duracaoCpu2, int ram) {
-    std::mt19937 rng(id + ram + duracaoCpu1); // Gerador pseudoaleatório
+    std::mt19937 rng(id + ram + duracaoCpu1);
     std::uniform_int_distribution<int> dist(0, 255);
 
     int r = (id * 50 + dist(rng)) % 256;
@@ -112,7 +113,7 @@ wxColour Processo::gerarCorUnica(int id, int duracaoCpu1, int duracaoIo, int dur
     if (!cor.IsOk()) {
         std::cerr << "Cor inválida gerada para Processo ID: " << id
                   << " R=" << r << ", G=" << g << ", B=" << b << std::endl;
-        return wxColour(0, 0, 0); // Retorna preto como fallback
+        return wxColour(0, 0, 0);
     }
     return cor;
 }
