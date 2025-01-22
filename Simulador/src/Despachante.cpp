@@ -70,6 +70,7 @@ void Despachante::escalonar(){
     //Controla quais processos terão seu tempo de I/O decrementado
     //Se um processo executou em uma u.t e foi bloqueado, não pode ter seu duracaoIo decrementado nesse ciclo e 
     //também não pode ser suspenso para alocar prontos suspensos 
+    
     processosAlocados.clear();
 
     gerenciadorMemoria->deletarProcessos();
@@ -331,17 +332,17 @@ void Despachante::decrementaBloqueados(std::unordered_set<Processo*>& processosA
 
 //Método ordena array de processos bloqueados por duracaoIo, dando preferência para os com maior duração
 //Suspende esses processos até atingir a memória necessária para alocar os processos prontos suspensos
-int Despachante::suspenderAteNecessario(int memoriaNecessaria, std::vector<Processo*>& processosParaDesalocar) {
+int Despachante::suspenderAteNecessario(int memoriaNecessaria, std::vector<Processo*>& processosParaSuspender) {
     int memoriaLiberada = 0;
 
     //Ordena os processos pelo tempo restante de I/O
-    std::sort(processosParaDesalocar.begin(), processosParaDesalocar.end(),
+    std::sort(processosParaSuspender.begin(), processosParaSuspender.end(),
               [](Processo* a, Processo* b) {
                   return a->getDuracaoIo() > b->getDuracaoIo();
               });
 
     //Suspende processos até atingir a memória necessária
-    for (Processo* processo : processosParaDesalocar) {
+    for (Processo* processo : processosParaSuspender) {
         if (memoriaNecessaria <= 0) break;
 
         gerenciadorMemoria->liberaMemoria(processo,processosAtuais);
@@ -357,10 +358,10 @@ int Despachante::suspenderAteNecessario(int memoriaNecessaria, std::vector<Proce
     }
     
     //Se sobraram processos bloqueados que não foram necessários, reinserir na filaBloqueados
-    if (!processosParaDesalocar.empty()){
+    if (!processosParaSuspender.empty()){
     
         //Reinserir os processos que não foram desalocados de volta na fila de bloqueados
-        for (Processo* processo : processosParaDesalocar) {
+        for (Processo* processo : processosParaSuspender) {
             
             //Verifica se o processo ainda está no vetor após a desalocação
             if (processo->getEstadoString() != "BLOQUEADO_SUSPENSO") {
@@ -393,16 +394,22 @@ void Despachante::tentarAlocarProcessosProntosSuspensos() {
 //Método verifica se é possível desalocar memoriaNecessaria dos processos bloqueados para alocar prontos suspensos
 bool Despachante::tentarSuspenderBloqueados(int memoriaNecessaria) {
     int memoriaTotalDesalocavel = 0;
-    std::vector<Processo*> processosParaDesalocar;
+    std::vector<Processo*> processosParaSuspender;
 
     //Calcular se a memória total desalocável é suficiente 
     size_t tamanhoOriginal = filaBloqueados.size();
     for (size_t i = 0; i < tamanhoOriginal; ++i) {
         
         Processo* processo = filaBloqueados.front();
+        //Se processo acabou de ser bloqueado nessa u.t, não pode ser suspenso!
+        if(processosAlocados.find(processo) != processosAlocados.end()){
+            filaBloqueados.pop();
+            filaBloqueados.push(processo);
+            continue;
+        }
         filaBloqueados.pop();
         memoriaTotalDesalocavel += processo->getRam();
-        processosParaDesalocar.push_back(processo);
+        processosParaSuspender.push_back(processo);
 
         //Previne iterações desnecessárias
         if(memoriaTotalDesalocavel >= memoriaNecessaria) break;
@@ -412,14 +419,14 @@ bool Despachante::tentarSuspenderBloqueados(int memoriaNecessaria) {
     //na filaBloqueados 
     if (memoriaTotalDesalocavel < memoriaNecessaria) {
 
-        for (Processo* processo : processosParaDesalocar) {
+        for (Processo* processo : processosParaSuspender) {
             filaBloqueados.push(processo);
         }
         return false; 
     }
 
     // Realiza a desalocação até atingir a memória necessária
-    int memoriaLiberada = suspenderAteNecessario(memoriaNecessaria, processosParaDesalocar);
+    int memoriaLiberada = suspenderAteNecessario(memoriaNecessaria, processosParaSuspender);
     return memoriaLiberada >= memoriaNecessaria;
 }
 

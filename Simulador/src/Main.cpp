@@ -128,7 +128,7 @@ public:
         tempoLabel = new wxStaticText(this, wxID_ANY, "Tempo Atual: ", wxPoint(15, 480));
         tempoLabel->SetFont(fontNegrito);
 
-        cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 10), wxSize(300, 345));
+        cpuPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 10), wxSize(300, 355));
         processosPanel = new wxPanel(this, wxID_ANY, wxPoint(300, 10), wxSize(300, 500));
         textoPanel = new wxPanel(this, wxID_ANY, wxPoint(780, 550), wxSize(900, 345));
         filaProntosPanel = new wxPanel(this, wxID_ANY, wxPoint(0, 560), wxSize(600, 40));
@@ -162,7 +162,7 @@ public:
         filaAuxiliarTextCtrl = new wxTextCtrl(filaAuxiliarPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(610, 40), 
                                  wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);                      
         
-        cpuTextCtrl = new wxTextCtrl(cpuPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(310, 345),
+        cpuTextCtrl = new wxTextCtrl(cpuPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(310, 365),
                                       wxTE_MULTILINE | wxTE_READONLY | wxTE_WORDWRAP);
 
         processosTextCtrl = new wxTextCtrl(processosPanel, wxID_ANY, "", wxPoint(10, 10), wxSize(880, 470),

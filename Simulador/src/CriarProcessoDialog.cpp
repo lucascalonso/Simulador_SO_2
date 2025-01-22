@@ -34,20 +34,20 @@ CriarProcessoDialog::CriarProcessoDialog(wxWindow* parent, Despachante* despacha
 }
 
 void CriarProcessoDialog::OnCriar(wxCommandEvent& event) {
-    // Obter os valores dos campos de entrada
+    //Obter os valores dos campos de entrada
     wxString IdStr = idCtrl->GetValue();
     wxString duracaoCpu1Str = duracaoCpu1Ctrl->GetValue();
     wxString duracaoIoStr = duracaoIoCtrl->GetValue();
     wxString duracaoCpu2Str = duracaoCpu2Ctrl->GetValue();
     wxString ramStr = ramCtrl->GetValue();
 
-    // Verifique se os campos não estão vazios
+    //Verifique se os campos não estão vazios
     if (IdStr.IsEmpty() || duracaoCpu1Str.IsEmpty() || duracaoIoStr.IsEmpty() || duracaoCpu2Str.IsEmpty() || ramStr.IsEmpty()) {
         wxMessageBox("Digite novamente.", "Por favor, preencha todos os campos antes de criar o processo.", wxOK | wxICON_ERROR);
         return;
     }
 
-    // Converter os valores para inteiros
+    //Converter os valores para inteiros
     int id = wxAtoi(IdStr);
     int duracaoCpu1 = wxAtoi(duracaoCpu1Str);
     int duracaoIo = wxAtoi(duracaoIoStr);
@@ -59,6 +59,16 @@ void CriarProcessoDialog::OnCriar(wxCommandEvent& event) {
         return;
     }
 
+    if(duracaoCpu1 == 0){
+        wxMessageBox("Digite novamente.", "O valor de DuraçãoCpu1 não pode ser zero.", wxOK | wxICON_ERROR);
+        return;
+    }
+
+    if(duracaoCpu2 == 0){
+        wxMessageBox("Digite novamente.", "O valor de DuraçãoCpu2 não pode ser zero.", wxOK | wxICON_ERROR);
+        return;
+    }
+
     for (auto& processo : despachanteInstance->getProcessosAtuais()) {
         if(id == processo->getId()){
             wxMessageBox("Digite novamente.", "Processo com Id duplicado.", wxOK | wxICON_ERROR);
@@ -66,17 +76,15 @@ void CriarProcessoDialog::OnCriar(wxCommandEvent& event) {
         }
     }
 
-    
-
-    // Criar o processo com os dados preenchidos
+    //Criar o processo com os dados preenchidos
     Processo* novoProcesso = new Processo(id, duracaoCpu1, duracaoIo, duracaoCpu2, ram);
     despachanteInstance->tentaAlocarProcesso(novoProcesso);
-
-    // Fechar o diálogo com sucesso
+    
+    //Fecha o diálogo com OK!
     EndModal(wxID_OK);
 }
 
 void CriarProcessoDialog::OnFechar(wxCloseEvent& event) {
-    // Quando o usuário tenta fechar, apenas fecha o diálogo sem realizar nenhuma ação.
+    //Quando o usuário tenta fechar, apenas fecha o diálogo sem realizar nenhuma ação.
     EndModal(wxID_CANCEL);
 }
