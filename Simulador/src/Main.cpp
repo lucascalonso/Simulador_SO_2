@@ -249,7 +249,9 @@ private:
 
     void atualizarMemoriaDisponivel() {
         int memoriaDisponivel = gerenciadorInstance->getMemoriaDisponivel();
-        memoriaDisponivelLabel->SetLabel("Memória disponível: " + std::to_string(memoriaDisponivel) + " MB");
+        int quadrosLivres = gerenciadorInstance->getQuadrosLivres();
+        memoriaDisponivelLabel->SetLabel("Memória disponível: " + std::to_string(memoriaDisponivel) + " MB\nQuadros livres: "
+                                                                + std::to_string(quadrosLivres));
     }
 
     void atualizarTempoAtual() {

@@ -23,6 +23,8 @@ int GerenciadorMemoria::getMemoriaTotal() const { return tamanhoTotal; }
 
 int GerenciadorMemoria::getMemoriaDisponivel() { return tamanhoLivre; }
 
+int GerenciadorMemoria::getQuadrosLivres() { return quadrosLivres; }
+
 //Aloca memória de acordo com o tamanho solicitado
 bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
     int paginasNecessarias = (tamanhoBloco + tamPaginas - 1) / tamPaginas;

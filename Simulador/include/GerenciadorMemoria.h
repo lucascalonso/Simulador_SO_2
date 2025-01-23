@@ -34,5 +34,6 @@ class GerenciadorMemoria{
         void deletarProcessos();
         std::set<Processo*> getProcessosADeletar();
         Processo *recuperarProcessoPorId(int id);
+        int getQuadrosLivres();
 };
 #endif
