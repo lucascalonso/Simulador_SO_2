@@ -9,7 +9,8 @@ GerenciadorMemoria::GerenciadorMemoria(int tamanhoTotal, Despachante* despachant
     : tamanhoTotal(tamanhoTotal), tamanhoLivre(tamanhoTotal), despachante(despachantePtr), tamPaginas(tamPaginas) 
     {
         //8192 quadros na MP
-        numPaginas = tamanhoTotal / tamPaginas;       
+        numPaginas = tamanhoTotal / tamPaginas;
+        quadrosLivres = numPaginas;   
         
         //Inicializar quadros MP como 0
         for (int i = 0; i < numPaginas; ++i) {
@@ -25,9 +26,13 @@ int GerenciadorMemoria::getMemoriaDisponivel() { return tamanhoLivre; }
 //Aloca memória de acordo com o tamanho solicitado
 bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
     int paginasNecessarias = (tamanhoBloco + tamPaginas - 1) / tamPaginas;
-
+    
     //Se há memória disponível, percorre array memoria buscando quadros livres
-    if(tamanhoBloco < tamanhoLivre){   
+    if(tamanhoBloco <= tamanhoLivre && quadrosLivres >= paginasNecessarias){
+        
+        quadrosLivres -= paginasNecessarias;
+        tamanhoLivre -= tamanhoBloco;
+
         for(int i = 0; i < 8192 && paginasNecessarias > 0;i++){
             if(memoria[i]==0){
                 memoria[i] = processoId;
@@ -39,7 +44,6 @@ bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
     else{
         return false;
     }
-    tamanhoLivre -= tamanhoBloco;
     std::cout << "Memória alocada: " << tamanhoBloco << " MB para o Processo #" << processoId << "\n";
     return true;
 }
@@ -50,13 +54,16 @@ void GerenciadorMemoria::liberaMemoria(Processo* processo, std::set<Processo*,Pr
     int tamanhoBloco = processo->getRam();
     int paginasLiberadas = (tamanhoBloco + tamPaginas - 1) / tamPaginas;
 
+    tamanhoLivre += tamanhoBloco;
+    quadrosLivres += paginasLiberadas;
+
     for (int i = 0; i < 8192 && paginasLiberadas > 0; ++i) {
         if (memoria[i] == processoId) {
             memoria[i] = 0;
             --paginasLiberadas;
         }
     }
-    tamanhoLivre += tamanhoBloco;
+     
 
     //Se processo terminou, precisa limpar do vetor de processosAtuais 
     if (processo->getEstadoString() == "TERMINADO") {

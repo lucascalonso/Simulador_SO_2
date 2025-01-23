@@ -17,7 +17,8 @@ class GerenciadorMemoria{
         int tamanhoTotal;
         int tamanhoLivre;
         int tamPaginas;
-        int numPaginas;           
+        int numPaginas;
+        int quadrosLivres;           
         Despachante *despachante;
         std::set<Processo*> processosADeletar;
 

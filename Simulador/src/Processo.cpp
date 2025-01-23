@@ -53,10 +53,6 @@ void Processo::executarCpu() {
     } else if (estado == Estado::PRONTO || estado == Estado::PRONTO_SUSPENSO) alterarEstado(Estado::EXECUTANDO);
 }
 
-void Processo::setTempoChegada(int tempo){
-    tempoChegada = tempoAtual;
-};
-
 int Processo::getTempoChegada() { return tempoChegada; }
 int Processo::getTempoRestanteCpu() { return tempoRestanteCpu; }
 int Processo::getRam() const {return ram;}
