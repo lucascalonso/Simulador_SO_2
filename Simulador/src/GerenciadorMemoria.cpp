@@ -28,7 +28,7 @@ bool GerenciadorMemoria::alocarMemoria(int processoId, int tamanhoBloco) {
     int paginasNecessarias = (tamanhoBloco + tamPaginas - 1) / tamPaginas;
     
     //Se há memória disponível, percorre array memoria buscando quadros livres
-    if(tamanhoBloco <= tamanhoLivre && quadrosLivres >= paginasNecessarias){
+    if(quadrosLivres >= paginasNecessarias){
         
         quadrosLivres -= paginasNecessarias;
         tamanhoLivre -= tamanhoBloco;
