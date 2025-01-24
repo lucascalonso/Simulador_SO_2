@@ -8,6 +8,8 @@
 #include "../include/globals.h"
 #include <random>
 #include <thread>
+#include <atomic>
+#include <condition_variable>
 #include <chrono>
 #include <sstream>
 
@@ -176,9 +178,13 @@ public:
 
     ~Simulador(){
         simuladorAtivo = false;
-        if (simuladorThread.joinable()) {
-            simuladorThread.join();
+        if (geradorThread.joinable()) {
+            geradorThread.join();
         }
+        if (escalonadorThread.joinable()) {
+            escalonadorThread.join();
+        }
+
         delete coutRedirector;
     }
 
@@ -186,8 +192,13 @@ private:
     GerenciadorMemoria* gerenciadorInstance;
     GeradorDeProcessos* geradorInstance;
     Despachante* despachanteInstance;
+    
     std::atomic<bool> simuladorAtivo;
-    std::thread simuladorThread;
+    
+    std::thread geradorThread;
+    std::thread escalonadorThread;
+    std::mutex mutex;
+    std::condition_variable cv;
     
     
     wxPanel* memoriaPanel;
@@ -225,16 +236,64 @@ private:
     wxBoxSizer* mainSizer;
 
     //Toggle do simulador após prompt e OK
+    //As duas threads são pausadas por unidades de tempo diferente,
+    //a thread geradora pausa por 1s e escalonador pausa por 2s
+    //Cada thread também atualiza a parte pertinente da GUI
     void OnButtonLigarSimuladorClick(wxCommandEvent& event) {
         if (!simuladorAtivo) {
             simuladorAtivo = true;
-            simuladorThread = std::thread(&Simulador::rodarSimulador, this);
+
+            //Thread p/ geração de processos
+            geradorThread = std::thread([this]() {
+                while (simuladorAtivo) {
+                    std::vector<Processo*> novosProcessos = geradorInstance->gerarProcessos();
+                    for (Processo* processo : novosProcessos) {
+                        despachanteInstance->tentaAlocarProcesso(processo);
+                    }
+                    //Atualiza os campos apropriados da GUI
+                    CallAfter([this]() {
+                        atualizarGUI();
+                    });
+                    //Pausa para não gerar tantos processos
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000)); 
+                }
+            });
+
+            //Thread p/ escalonar
+            escalonadorThread = std::thread([this]() {
+                while (simuladorAtivo) {
+                    {
+                        std::unique_lock<std::mutex> lock(mutex);
+                        cv.wait(lock, [this]() { return this->simuladorAtivo.load(); }); 
+                    }
+
+                    //Incrementa o tempo e chama escalonar
+                    tempoAtual++;
+                    gerenciadorInstance->getDespachante()->escalonar();
+
+                    //Atualiza os campos da GUI
+                    CallAfter([this]() {
+                        atualizarGUI();
+                    });
+                    //Pausa p/ acompanhar
+                    std::this_thread::sleep_for(std::chrono::milliseconds(2000)); 
+                }
+            });
+
             wxMessageBox("Simulador ligado!", "Simulador ligado!", wxOK | wxICON_INFORMATION);
         } else {
             simuladorAtivo = false;
-            if (simuladorThread.joinable()) {
-                simuladorThread.join();
+
+            //Notifica as threads p/ unir
+            cv.notify_all();
+
+            if (geradorThread.joinable()) {
+                geradorThread.join();
             }
+            if (escalonadorThread.joinable()) {
+                escalonadorThread.join();
+            }
+
             wxMessageBox("Simulador desligado!", "Simulador desligado!", wxOK | wxICON_INFORMATION);
         }
     }
@@ -258,32 +317,14 @@ private:
         tempoLabel->SetLabel("Tempo Atual: " + std::to_string(tempoAtual));
     }
 
-    //Método de loop do simulador. Desligado ao clicar novamente em toggle (simuladorAtivo := false)
-    void rodarSimulador() {
-        while (simuladorAtivo) {
-            //Gera novos processos e tenta aloca-los
-            std::vector<Processo*> novosProcessos = geradorInstance->gerarProcessos();
-            for (Processo* processo : novosProcessos) {
-                despachanteInstance->tentaAlocarProcesso(processo);
-            }
 
-            //Incrementa tempo e call escalonar
-            tempoAtual++;
-            gerenciadorInstance->getDespachante()->escalonar();
-            
-            //Faz Simulador rodar na thread principal
-            CallAfter([this]() {
-                atualizarTempoAtual();
-                exibirProcessosNasCpus();
-                exibirTodosOsProcessos();
-                exibirTodasAsFilas();
-                memoriaPanel->Refresh();
-                atualizarMemoriaDisponivel();
-            });
-        
-            //Pausa por 2 segundos
-            std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-        }
+    void atualizarGUI(){
+        atualizarTempoAtual();
+        exibirProcessosNasCpus();
+        exibirTodosOsProcessos();
+        exibirTodasAsFilas();
+        memoriaPanel->Refresh();
+        atualizarMemoriaDisponivel();
     }
 
     void OnButtonEscalonarClick(wxCommandEvent& event) {
