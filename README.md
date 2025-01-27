@@ -4,7 +4,7 @@ Final Project for TCC00316 - Operating Systems Class<br>
 Universidade Federal Fluminense - 2024.2
 
 
-![Project Screenshot](<img width="1680" alt="Screenshot 2025-01-26 at 23 23 35" src="https://github.com/user-attachments/assets/efe5d3c6-828b-4b34-8f09-5c1f97555b64" />)
+![Project Screenshot](https://github.com/user-attachments/assets/efe5d3c6-828b-4b34-8f09-5c1f97555b64)
 
 ## Requirements
 
